@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 /** Format a number as Pakistani Rupees */
 export function formatPrice(amount: number | string): string {
   const num = typeof amount === "string" ? parseFloat(amount) : amount;
-  return `Rs. ${num.toLocaleString("en-PK", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  return `Rs. ${num.toLocaleString("en-PK", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
 /** Convert paisa (integer) to rupees display */

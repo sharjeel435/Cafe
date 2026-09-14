@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
 import { getCafeteriaStatus } from "@/server/actions/settings";
 import { getStudentOrders } from "@/server/actions/orders";
 import { getWallet } from "@/server/actions/wallet";
@@ -9,7 +8,7 @@ import { getMenuItems } from "@/server/actions/menu";
 import { RushLevelBadge, OrderStatusBadge } from "@/components/ui/status-badge";
 import { Clock, Wallet, ArrowRight, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatPrice, paisaToRupees, timeAgo } from "@/lib/utils";
+import { formatPrice, paisaToRupees } from "@/lib/utils";
 
 const QUICK_CATEGORIES = [
   { emoji: "🍛", name: "Desi", slug: "desi" },

@@ -7,7 +7,7 @@ import { paisaToRupees, formatDate } from "@/lib/utils";
 import { adminAddWalletCredit } from "@/server/actions/wallet";
 import { toast } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
-import type { User, StudentProfile, Wallet } from "@prisma/client";
+import type { User, StudentProfile, Wallet } from "@/types/models";
 
 type UserWithProfile = User & {
   studentProfile: StudentProfile | null;

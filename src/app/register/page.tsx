@@ -23,7 +23,6 @@ export default function RegisterPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    getValues,
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
   });

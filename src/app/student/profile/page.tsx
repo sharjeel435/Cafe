@@ -1,9 +1,8 @@
-import { auth } from "@/lib/auth";
+import { auth, signOut } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getUserProfile } from "@/server/actions/auth";
 import { User, Mail, Phone, CreditCard, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 export const metadata = { title: "Profile" };
 
@@ -55,7 +54,7 @@ export default async function ProfilePage() {
       </div>
 
       {/* Sign out */}
-      <form action="/api/auth/signout" method="post">
+      <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
         <Button type="submit" variant="outline" fullWidth>
           <LogOut size={16} />
           Sign Out

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/layout/admin-sidebar";
@@ -15,7 +16,7 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <AdminSidebar user={session.user} />
-      <main className="flex-1 md:ml-56 p-4 md:p-6">{children}</main>
+      <main className="min-w-0 flex-1 md:ml-56 p-4 pt-20 md:p-6">{children}</main>
     </div>
   );
 }

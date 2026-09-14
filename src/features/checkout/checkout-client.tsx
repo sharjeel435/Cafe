@@ -8,10 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { formatPrice, paisaToRupees } from "@/lib/utils";
 import { createOrder } from "@/server/actions/orders";
 import { toast } from "@/components/ui/toast";
-import type { Cart, CartItem, MenuItem } from "@prisma/client";
+import type { Cart, CartItem, MenuItem } from "@/types/models";
 
 type FullCart = Cart & {
-  items: (CartItem & { menuItem: MenuItem })[];
+  items: (CartItem & { unitPricePaisa: number; menuItem: MenuItem })[];
 };
 
 interface SlotData {
@@ -39,14 +39,14 @@ export function CheckoutClient({
 }: CheckoutClientProps) {
   const router = useRouter();
   const [selectedSlot, setSelectedSlot] = useState<string>("");
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "WALLET">("CASH");
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "WALLET">(settings.cashEnabled !== "false" ? "CASH" : "WALLET");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<{ orderNumber: string } | null>(null);
 
   const subtotal = cart.items.reduce(
     (acc, item) =>
-      acc + parseFloat(item.menuItem.price.toString()) * item.quantity,
+      acc + (item.unitPricePaisa / 100) * item.quantity,
     0
   );
   const serviceFee = parseFloat(settings.serviceFee ?? "0");
@@ -121,7 +121,7 @@ export function CheckoutClient({
               </span>
               <span className="font-medium text-gray-900">
                 {formatPrice(
-                  (parseFloat(item.menuItem.price.toString()) * item.quantity).toFixed(0)
+                  ((item.unitPricePaisa / 100) * item.quantity).toFixed(2)
                 )}
               </span>
             </div>
@@ -129,12 +129,12 @@ export function CheckoutClient({
           {serviceFee > 0 && (
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Service fee</span>
-              <span className="font-medium">{formatPrice(serviceFee.toFixed(0))}</span>
+              <span className="font-medium">{formatPrice(serviceFee.toFixed(2))}</span>
             </div>
           )}
           <div className="border-t border-gray-100 pt-2 mt-2 flex justify-between font-bold">
             <span>Total</span>
-            <span className="text-orange-600">{formatPrice(total.toFixed(0))}</span>
+            <span className="text-orange-600">{formatPrice(total.toFixed(2))}</span>
           </div>
         </div>
       </div>
@@ -254,7 +254,7 @@ export function CheckoutClient({
           <p className="text-xs text-red-600 mt-2 flex items-center gap-1">
             <AlertCircle size={12} />
             Insufficient balance. Need{" "}
-            {formatPrice((total - walletBalanceRupees).toFixed(0))} more.
+            {formatPrice((total - walletBalanceRupees).toFixed(2))} more.
           </p>
         )}
       </div>
@@ -282,7 +282,7 @@ export function CheckoutClient({
         disabled={!selectedSlot || (paymentMethod === "WALLET" && !walletSufficient)}
         onClick={handleSubmit}
       >
-        Place Order · {formatPrice(total.toFixed(0))}
+        Place Order · {formatPrice(total.toFixed(2))}
       </Button>
     </div>
   );

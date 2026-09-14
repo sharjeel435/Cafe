@@ -1,442 +1,326 @@
 import Link from "next/link";
-import { Utensils, Clock, ShoppingBag, CheckCircle, Star, Zap, Shield, Smartphone, ArrowRight, ChevronDown } from "lucide-react";
+import Image from "next/image";
+import {
+  ArrowRight,
+  Clock,
+  Utensils,
+  Wallet,
+  Check,
+  Leaf,
+  ChevronDown,
+  ShoppingBag,
+} from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
-import { Button } from "@/components/ui/button";
-
-// Static cafeteria data for hero stats (in production, fetch from DB)
-const LIVE_STATS = {
-  status: "OPEN",
-  avgPrep: 12,
-  activeOrders: 18,
-  nextSlot: "1:20 PM",
-};
-
-const HOW_IT_WORKS = [
+const steps = [
   {
-    step: "01",
-    title: "Browse",
-    desc: "Explore today's cafeteria menu from your phone — anywhere on campus.",
-    icon: "🍽️",
+    number: "01",
+    title: "Find your favorite",
+    text: "From a comforting plate of biryani to your between-class chai. Browse what’s available.",
+    icon: Utensils,
   },
   {
-    step: "02",
-    title: "Order",
-    desc: "Add your meal, choose a pickup time slot, and pay with cash or wallet.",
-    icon: "📱",
+    number: "02",
+    title: "Make it your own",
+    text: "Pick your extras, choose a collection time, and pay with your wallet or cash at pickup.",
+    icon: ShoppingBag,
   },
   {
-    step: "03",
-    title: "Pick Up",
-    desc: "Get notified when ready. Walk up, show your code, and grab your food.",
-    icon: "🎉",
+    number: "03",
+    title: "Pick up & get going",
+    text: "Follow your order, show your pickup code when it’s ready, and enjoy your break.",
+    icon: Check,
   },
 ];
-
-const POPULAR_ITEMS = [
-  { name: "Chicken Biryani", price: "Rs. 250", emoji: "🍛", badge: "Most Ordered" },
-  { name: "Zinger Burger", price: "Rs. 380", emoji: "🍔", badge: "Student Fav" },
-  { name: "Club Sandwich", price: "Rs. 320", emoji: "🥪", badge: null },
-  { name: "Chicken Roll", price: "Rs. 180", emoji: "🌯", badge: "Quick Pick" },
-  { name: "French Fries", price: "Rs. 180", emoji: "🍟", badge: null },
-  { name: "Chai", price: "Rs. 80", emoji: "☕", badge: "Classic" },
+const questions = [
+  [
+    "How do pickup times work?",
+    "Choose an available pickup window at checkout. We leave enough time to prepare your meal, and limit orders per slot to keep collection manageable.",
+  ],
+  [
+    "How can I pay?",
+    "Use your campus wallet or select cash at pickup, depending on the methods enabled by the cafeteria. Your total, including any extras and service fee, is shown before you order.",
+  ],
+  [
+    "Can I cancel an order?",
+    "You can usually cancel before the kitchen starts preparing your meal. The cafeteria’s cancellation policy applies, and eligible wallet payments are refunded automatically.",
+  ],
+  [
+    "How do I try the demo?",
+    "Open Sign In and choose a seeded demo account. There are student, staff, and admin accounts, so you can explore both ordering and kitchen management.",
+  ],
 ];
-
-const FEATURES = [
-  {
-    icon: <Zap size={20} />,
-    title: "Live Availability",
-    desc: "See what's available right now. No surprises at the counter.",
-  },
-  {
-    icon: <Clock size={20} />,
-    title: "Pickup Scheduling",
-    desc: "Choose a 10-minute window that fits between your classes.",
-  },
-  {
-    icon: <ShoppingBag size={20} />,
-    title: "Order Tracking",
-    desc: "Watch your order go from confirmed → preparing → ready.",
-  },
-  {
-    icon: <Shield size={20} />,
-    title: "Secure Wallet",
-    desc: "Top up your campus wallet and pay instantly without cash.",
-  },
-  {
-    icon: <Star size={20} />,
-    title: "Rush-Hour Control",
-    desc: "Capped pickup slots prevent overcrowding during lunch rush.",
-  },
-  {
-    icon: <Smartphone size={20} />,
-    title: "Mobile First",
-    desc: "Designed for your phone. Order on the way to your next lecture.",
-  },
-];
-
-const FAQ = [
-  {
-    q: "When can I pick up my order?",
-    a: "You choose a 10-minute pickup window when placing your order. Slots are capped to avoid congestion. Once your food is ready, you'll get a notification.",
-  },
-  {
-    q: "What if I need to cancel?",
-    a: "You can cancel your order before the kitchen starts preparing it. Wallet payments are refunded instantly.",
-  },
-  {
-    q: "Do I need to pay upfront?",
-    a: "You can pay with Cash at Pickup (hand the money to the cashier) or your Campus Wallet (deducted when you place the order).",
-  },
-  {
-    q: "What if an item runs out?",
-    a: "Items are marked unavailable in real time. You won't be able to add out-of-stock items to your order.",
-  },
-  {
-    q: "Can I reorder a previous meal?",
-    a: "Yes! Your order history has a one-click Reorder button for past meals.",
-  },
-];
-
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="bg-[#fbfaf6]">
       <Navbar />
-
-      {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section className="relative bg-gradient-to-br from-orange-50 via-white to-amber-50 py-20 md:py-28 overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-orange-100 rounded-full opacity-40 blur-3xl" />
-          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-amber-100 rounded-full opacity-40 blur-3xl" />
-        </div>
-
-        <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
+      <main>
+        <section className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-12 md:grid-cols-2 md:gap-16 md:py-20">
           <div>
-            <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              Cafeteria is Open — Live orders running
-            </div>
-
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-4 text-balance">
-              Skip the Queue.{" "}
-              <span className="text-orange-500">Grab Your Food.</span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">
+              <span className="h-2 w-2 rounded-full bg-orange-500" />
+              BUKC · A better break starts here
+            </span>
+            <h1 className="mt-7 text-5xl font-bold leading-[1.08] tracking-[-0.045em] text-[#20392e] sm:text-6xl lg:text-7xl">
+              Good food.
+              <br />
+              Less waiting.
+              <br />
+              <span className="text-orange-600">More campus life.</span>
             </h1>
-
-            <p className="text-lg text-gray-600 mb-8 max-w-md">
-              Pre-order your cafeteria meal from your phone. Choose a pickup
-              slot, pay your way, and collect your food without waiting in line.
+            <p className="mt-6 max-w-md text-base leading-7 text-gray-600">
+              Your favorite BUKC campus meals, ready around your schedule. Order
+              ahead, skip the queue, and make the most of your break.
             </p>
-
-            <div className="flex flex-wrap gap-3">
-              <Link href="/register">
-                <Button size="lg">
-                  Order Now
-                  <ArrowRight size={18} />
-                </Button>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/menu"
+                className="inline-flex items-center gap-3 rounded-xl bg-orange-600 px-6 py-3.5 font-semibold text-white shadow-sm transition hover:bg-orange-700"
+              >
+                Explore the menu <ArrowRight size={18} />
               </Link>
-              <Link href="/menu">
-                <Button variant="outline" size="lg">
-                  Explore Menu
-                </Button>
+              <Link
+                href="/login"
+                className="rounded-xl border border-gray-300 bg-white px-6 py-3.5 font-semibold text-gray-700 transition hover:border-orange-400"
+              >
+                Sign in to order
               </Link>
             </div>
-          </div>
-
-          {/* Live Stats Card */}
-          <div className="flex justify-center md:justify-end">
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 w-full max-w-sm">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <Utensils size={18} className="text-orange-500" />
-                  <span className="font-semibold text-gray-800">
-                    Today&apos;s Cafeteria
-                  </span>
-                </div>
-                <span className="flex items-center gap-1.5 text-xs font-semibold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                  {LIVE_STATS.status}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-orange-50 rounded-xl p-3">
-                  <div className="text-2xl font-bold text-orange-600">
-                    {LIVE_STATS.avgPrep}m
-                  </div>
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    Avg. Prep Time
-                  </div>
-                </div>
-                <div className="bg-blue-50 rounded-xl p-3">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {LIVE_STATS.activeOrders}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    Orders Active
-                  </div>
-                </div>
-                <div className="col-span-2 bg-gray-50 rounded-xl p-3">
-                  <div className="text-sm font-semibold text-gray-700">
-                    Next available pickup
-                  </div>
-                  <div className="text-xl font-bold text-gray-900 mt-0.5">
-                    {LIVE_STATS.nextSlot}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <Link href="/register">
-                  <Button fullWidth size="sm">
-                    Start Your Order
-                  </Button>
-                </Link>
-              </div>
+            <div className="mt-7 flex flex-wrap gap-5 text-xs font-medium text-gray-600">
+              <span className="flex items-center gap-1.5">
+                <Check size={15} className="text-green-700" />
+                Made fresh on campus
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Check size={15} className="text-green-700" />
+                Pickup on your time
+              </span>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ─────────────────────────────────────────────────── */}
-      <section id="how-it-works" className="py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">
-              How CampusBite Works
-            </h2>
-            <p className="text-gray-500 max-w-md mx-auto">
-              Order in 3 simple steps. No waiting, no stress.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {HOW_IT_WORKS.map((step, i) => (
-              <div key={step.step} className="relative text-center">
-                {i < HOW_IT_WORKS.length - 1 && (
-                  <div className="hidden md:block absolute top-10 left-[60%] w-[80%] h-px border-t-2 border-dashed border-orange-200" />
-                )}
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-orange-50 rounded-2xl text-3xl mb-4 relative z-10">
-                  {step.icon}
-                </div>
-                <div className="text-xs font-bold text-orange-400 uppercase tracking-widest mb-1">
-                  Step {step.step}
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {step.title}
-                </h3>
-                <p className="text-sm text-gray-500 max-w-xs mx-auto">
-                  {step.desc}
+          <div className="relative pb-6 pl-3 md:pl-0">
+            <div className="relative aspect-[4/4.3] overflow-hidden rounded-[2rem] bg-orange-100">
+              <Image
+                src="/food/biryani.jpg"
+                alt="A freshly prepared plate of chicken biryani"
+                fill
+                loading="eager"
+                sizes="(max-width: 768px) 95vw, 550px"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+              <div className="absolute bottom-20 left-7 text-white">
+                <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-orange-100">
+                  A campus kind of comfort
+                </p>
+                <h2 className="text-3xl font-semibold">
+                  Fresh. Flavorful. Familiar.
+                </h2>
+              </div>
+            </div>
+            <div className="absolute -left-2 bottom-0 flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-lg">
+              <span className="rounded-xl bg-green-100 p-3 text-green-800">
+                <Clock size={22} />
+              </span>
+              <div>
+                <p className="font-semibold text-gray-900">
+                  Lunch that fits your timetable
+                </p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Order ahead. Pick up between classes.
                 </p>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      </section>
-
-      {/* ── POPULAR TODAY ─────────────────────────────────────────────────── */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-10">
+        </section>
+        <section
+          id="how-it-works"
+          className="border-y border-[#e7e6df] bg-white py-14"
+        >
+          <div className="mx-auto max-w-6xl px-5">
+            <div className="mb-9 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-orange-600">
+                  Less hassle, more flavor
+                </p>
+                <h2 className="mt-3 text-3xl font-bold tracking-tight text-[#20392e]">
+                  Your next meal, in three steps.
+                </h2>
+              </div>
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-orange-700"
+              >
+                Let’s get you started <ArrowRight size={16} />
+              </Link>
+            </div>
+            <div className="grid gap-8 md:grid-cols-3">
+              {steps.map(({ number, title, text, icon: Icon }) => (
+                <div
+                  key={number}
+                  className="rounded-2xl border border-gray-100 bg-[#fbfaf6] p-6"
+                >
+                  <div className="flex items-center justify-between">
+                    <Icon className="text-orange-600" size={25} />
+                    <span className="text-3xl font-bold text-[#d9ddd6]">
+                      {number}
+                    </span>
+                  </div>
+                  <h3 className="mb-2 mt-5 text-lg font-bold text-[#20392e]">
+                    {title}
+                  </h3>
+                  <p className="text-sm leading-6 text-gray-600">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+        <section className="mx-auto max-w-6xl px-5 py-16">
+          <div className="mb-8 flex items-end justify-between gap-4">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-1">
-                Popular Today
-              </h2>
-              <p className="text-gray-500">
-                What students are ordering right now
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-orange-600">
+                Something for every craving
               </p>
+              <h2 className="mt-3 text-3xl font-bold text-[#20392e]">
+                Familiar favorites. Freshly made.
+              </h2>
             </div>
             <Link
               href="/menu"
-              className="hidden sm:flex items-center gap-1 text-sm font-medium text-orange-600 hover:text-orange-700"
+              className="hidden items-center gap-2 whitespace-nowrap text-sm font-semibold text-orange-700 sm:flex"
             >
-              View full menu <ArrowRight size={16} />
+              See the menu <ArrowRight size={16} />
             </Link>
           </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {POPULAR_ITEMS.map((item) => (
-              <div
-                key={item.name}
-                className="bg-white rounded-2xl p-4 text-center border border-gray-100 hover:shadow-md transition-shadow"
-              >
-                <div className="text-4xl mb-3">{item.emoji}</div>
-                {item.badge && (
-                  <span className="inline-block text-[10px] font-semibold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full mb-2">
-                    {item.badge}
-                  </span>
-                )}
-                <div className="text-sm font-semibold text-gray-800 leading-tight mb-1">
-                  {item.name}
-                </div>
-                <div className="text-sm font-bold text-orange-600">
-                  {item.price}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center mt-6 sm:hidden">
-            <Link href="/menu">
-              <Button variant="outline">View Full Menu</Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── FEATURES ─────────────────────────────────────────────────────── */}
-      <section id="features" className="py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">
-              Everything You Need
-            </h2>
-            <p className="text-gray-500 max-w-md mx-auto">
-              Built for busy university students with a full-featured cafeteria
-              ordering experience.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FEATURES.map((f) => (
-              <div
-                key={f.title}
-                className="flex gap-4 p-5 rounded-2xl border border-gray-100 hover:border-orange-200 hover:bg-orange-50/30 transition-colors"
-              >
-                <div className="flex-shrink-0 w-9 h-9 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600">
-                  {f.icon}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">
-                    {f.title}
-                  </h3>
-                  <p className="text-sm text-gray-500">{f.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── WHY CAMPUSBITE ───────────────────────────────────────────────── */}
-      <section className="py-20 bg-orange-500">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-3">
-              Why CampusBite?
-            </h2>
-            <p className="text-orange-100 max-w-md mx-auto">
-              Real benefits for students and cafeteria staff.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid gap-5 sm:grid-cols-3">
             {[
-              { stat: "~15 min", label: "Saved per visit", icon: "⏱️" },
-              { stat: "0", label: "Surprise wait times", icon: "✅" },
-              { stat: "Real-time", label: "Order tracking", icon: "📡" },
-              { stat: "Any time", label: "Order from campus", icon: "🎓" },
+              {
+                image: "biryani",
+                name: "A little taste of home",
+                category: "Desi favorites",
+                slug: "desi",
+              },
+              {
+                image: "burger",
+                name: "Big break energy",
+                category: "Burgers & more",
+                slug: "burgers",
+              },
+              {
+                image: "chai",
+                name: "Your daily chai ritual",
+                category: "Tea & coffee",
+                slug: "tea-coffee",
+              },
             ].map((item) => (
-              <div
-                key={item.label}
-                className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-6"
+              <Link
+                key={item.image}
+                href={`/menu?category=${item.slug}`}
+                className="group overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:-translate-y-1 hover:shadow-md"
               >
-                <div className="text-3xl mb-3">{item.icon}</div>
-                <div className="text-2xl font-bold text-white mb-1">
-                  {item.stat}
+                <div className="relative aspect-[4/3]">
+                  <Image
+                    src={`/food/${item.image}.jpg`}
+                    alt={item.category}
+                    fill
+                    sizes="(max-width: 640px) 90vw, 360px"
+                    className="object-cover transition duration-500 group-hover:scale-105"
+                  />
                 </div>
-                <div className="text-sm text-orange-100">{item.label}</div>
-              </div>
+                <div className="p-5">
+                  <p className="text-xs font-semibold text-orange-700">
+                    {item.category}
+                  </p>
+                  <h3 className="mt-2 flex items-center justify-between text-lg font-bold text-[#20392e]">
+                    {item.name}
+                    <ArrowRight size={18} />
+                  </h3>
+                </div>
+              </Link>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ── FAQ ──────────────────────────────────────────────────────────── */}
-      <section id="faq" className="py-20 bg-white">
-        <div className="max-w-3xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">
-              Frequently Asked Questions
-            </h2>
+        </section>
+        <section id="features" className="mx-auto max-w-6xl px-5">
+          <div className="grid items-center gap-8 rounded-3xl bg-[#20392e] p-8 text-white md:grid-cols-2 md:p-12">
+            <div>
+              <Leaf size={28} className="mb-5 text-orange-300" />
+              <h2 className="text-3xl font-bold leading-tight">
+                Built for busy days.
+                <br />
+                And well-earned breaks.
+              </h2>
+              <p className="mt-4 max-w-sm text-sm leading-6 text-green-100/80">
+                From your first lecture to your last study session, a good meal
+                should be the easy part.
+              </p>
+            </div>
+            <div className="space-y-6">
+              {[
+                {
+                  icon: Clock,
+                  title: "A pickup time that works for you",
+                  text: "Available slots and preparation times help you plan ahead.",
+                },
+                {
+                  icon: Wallet,
+                  title: "Your wallet. Your way.",
+                  text: "Keep track of your balance, payments, and refunds in one place.",
+                },
+                {
+                  icon: ShoppingBag,
+                  title: "Follow every step",
+                  text: "See when your order is accepted, cooking, and ready to collect.",
+                },
+              ].map(({ icon: Icon, title, text }) => (
+                <div key={title} className="flex gap-4">
+                  <Icon size={22} className="mt-1 shrink-0 text-orange-300" />
+                  <div>
+                    <h3 className="font-semibold">{title}</h3>
+                    <p className="mt-1 text-sm leading-6 text-green-100/75">
+                      {text}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-
+        </section>
+        <section id="faq" className="mx-auto max-w-3xl px-5 py-20">
+          <h2 className="mb-8 text-center text-3xl font-bold text-[#20392e]">
+            A few things you might be wondering.
+          </h2>
           <div className="space-y-3">
-            {FAQ.map((item) => (
+            {questions.map(([question, answer]) => (
               <details
-                key={item.q}
-                className="group border border-gray-200 rounded-xl overflow-hidden"
+                key={question}
+                className="group rounded-xl border border-gray-200 bg-white p-5"
               >
-                <summary className="flex items-center justify-between px-5 py-4 cursor-pointer font-medium text-gray-800 hover:bg-gray-50 list-none">
-                  {item.q}
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold">
+                  {question}
                   <ChevronDown
-                    size={18}
-                    className="text-gray-400 flex-shrink-0 ml-4 group-open:rotate-180 transition-transform"
+                    size={17}
+                    className="shrink-0 transition group-open:rotate-180"
                   />
                 </summary>
-                <div className="px-5 pb-4 text-sm text-gray-600 leading-relaxed">
-                  {item.a}
-                </div>
+                <p className="mt-3 text-sm leading-6 text-gray-600">{answer}</p>
               </details>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ── CTA BANNER ───────────────────────────────────────────────────── */}
-      <section className="py-16 bg-gray-900">
-        <div className="max-w-2xl mx-auto px-4 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
-            Ready to skip the queue?
-          </h2>
-          <p className="text-gray-400 mb-6">
-            Join thousands of Karachi University students ordering smarter.
+        </section>
+      </main>
+      <footer className="border-t border-gray-200 bg-white">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-7">
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-bold text-[#20392e]"
+          >
+            <Utensils size={18} className="text-orange-600" />
+            CampusBite
+          </Link>
+          <p className="text-xs text-gray-500">
+            Made for good food and better campus days.
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Link href="/register">
-              <Button size="lg">
-                Create Account
-                <ArrowRight size={18} />
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button variant="outline" size="lg" className="border-gray-600 text-gray-300 hover:bg-gray-800">
-                Sign In
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── FOOTER ───────────────────────────────────────────────────────── */}
-      <footer className="bg-gray-900 border-t border-gray-800 py-10">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 font-bold text-lg text-white">
-              <span className="flex items-center justify-center w-7 h-7 bg-orange-500 rounded-lg text-white">
-                <Utensils size={14} />
-              </span>
-              Campus<span className="text-orange-400">Bite</span>
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-gray-400">
-              <Link href="/#how-it-works" className="hover:text-white">
-                How It Works
-              </Link>
-              <Link href="/menu" className="hover:text-white">
-                Menu
-              </Link>
-              <Link href="/login" className="hover:text-white">
-                Sign In
-              </Link>
-              <Link href="/register" className="hover:text-white">
-                Register
-              </Link>
-            </div>
-
-            <p className="text-xs text-gray-600">
-              © {new Date().getFullYear()} CampusBite. Karachi University.
-            </p>
-          </div>
+          <Link href="/login" className="text-xs font-medium text-gray-600">
+            Student & staff sign in →
+          </Link>
         </div>
       </footer>
     </div>

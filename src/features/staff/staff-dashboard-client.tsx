@@ -6,7 +6,7 @@ import { Clock, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { updateOrderStatus } from "@/server/actions/orders";
 import { toast } from "@/components/ui/toast";
-import type { Order, OrderItem, PickupSlot } from "@prisma/client";
+import type { Order, OrderItem, PickupSlot } from "@/types/models";
 
 type StaffOrder = Order & {
   items: OrderItem[];
@@ -44,7 +44,8 @@ function OrderCard({ order, onAction }: { order: StaffOrder; onAction: (id: stri
   const [loading, setLoading] = useState(false);
   const nextStatus = NEXT_STATUS[order.status];
   const actionLabel = ACTION_LABELS[order.status];
-  const now = Date.now();
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(timer); }, []);
   const ageMin = Math.floor((now - new Date(order.createdAt).getTime()) / 60000);
   const isUrgent = order.pickupSlot && ageMin > 8;
 
@@ -113,7 +114,7 @@ function OrderCard({ order, onAction }: { order: StaffOrder; onAction: (id: stri
 
 export function StaffDashboardClient({ orders: initialOrders, stats }: StaffDashboardClientProps) {
   const router = useRouter();
-  const [orders, setOrders] = useState(initialOrders);
+  const orders = initialOrders;
   const [refreshing, setRefreshing] = useState(false);
 
   // Auto-refresh every 30 seconds
@@ -124,9 +125,6 @@ export function StaffDashboardClient({ orders: initialOrders, stats }: StaffDash
     return () => clearInterval(interval);
   }, [router]);
 
-  useEffect(() => {
-    setOrders(initialOrders);
-  }, [initialOrders]);
 
   const handleAction = async (orderId: string, nextStatus: string) => {
     const result = await updateOrderStatus(orderId, nextStatus as Parameters<typeof updateOrderStatus>[1]);

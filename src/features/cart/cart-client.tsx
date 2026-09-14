@@ -9,10 +9,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { formatPrice } from "@/lib/utils";
 import { updateCartItem, removeCartItem, clearCart } from "@/server/actions/cart";
 import { toast } from "@/components/ui/toast";
-import type { Cart, CartItem, MenuItem, MenuCategory } from "@prisma/client";
+import type { Cart, CartItem, MenuItem, MenuCategory } from "@/types/models";
 
 type FullCart = Cart & {
-  items: (CartItem & {
+  items: (CartItem & { unitPricePaisa: number;
     menuItem: MenuItem & { category: MenuCategory };
   })[];
 };
@@ -25,29 +25,30 @@ export function CartClient({ cart }: { cart: FullCart | null }) {
   const items = cart?.items ?? [];
   const subtotal = items.reduce(
     (acc, item) =>
-      acc + parseFloat(item.menuItem.price.toString()) * item.quantity,
+      acc + (item.unitPricePaisa / 100) * item.quantity,
     0
   );
 
   const handleQty = async (itemId: string, qty: number) => {
     setLoadingId(itemId);
-    await updateCartItem(itemId, qty);
+    const result = await updateCartItem(itemId, qty);
+    if (!result.success) toast.error(result.error);
     router.refresh();
     setLoadingId(null);
   };
 
   const handleRemove = async (itemId: string) => {
     setLoadingId(itemId);
-    await removeCartItem(itemId);
-    toast.success("Item removed");
+    const result = await removeCartItem(itemId);
+    if (result.success) toast.success("Item removed"); else toast.error(result.error);
     router.refresh();
     setLoadingId(null);
   };
 
   const handleClear = async () => {
     setClearing(true);
-    await clearCart();
-    toast.success("Cart cleared");
+    const result = await clearCart();
+    if (result.success) toast.success("Cart cleared"); else toast.error(result.error);
     router.refresh();
     setClearing(false);
   };
@@ -148,8 +149,8 @@ export function CartClient({ cart }: { cart: FullCart | null }) {
                 <span className="text-sm font-bold text-orange-600">
                   {formatPrice(
                     (
-                      parseFloat(item.menuItem.price.toString()) * item.quantity
-                    ).toFixed(0)
+                      (item.unitPricePaisa / 100) * item.quantity
+                    ).toFixed(2)
                   )}
                 </span>
               </div>
@@ -162,7 +163,7 @@ export function CartClient({ cart }: { cart: FullCart | null }) {
       <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-4">
         <div className="flex justify-between text-sm mb-2">
           <span className="text-gray-600">Subtotal</span>
-          <span className="font-semibold">{formatPrice(subtotal.toFixed(0))}</span>
+          <span className="font-semibold">{formatPrice(subtotal.toFixed(2))}</span>
         </div>
         <div className="flex justify-between text-sm mb-2">
           <span className="text-gray-600">Service fee</span>
@@ -171,7 +172,7 @@ export function CartClient({ cart }: { cart: FullCart | null }) {
         <div className="border-t border-gray-100 pt-2 mt-2 flex justify-between">
           <span className="font-semibold text-gray-900">Total</span>
           <span className="font-bold text-orange-600 text-lg">
-            {formatPrice(subtotal.toFixed(0))}
+            {formatPrice(subtotal.toFixed(2))}
           </span>
         </div>
       </div>

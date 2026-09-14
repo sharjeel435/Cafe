@@ -1,0 +1,16 @@
+import type * as DB from "@prisma/client";
+import type { Serialized } from "@/lib/serialize";
+export type MenuItem = Serialized<DB.MenuItem>;
+export type MenuItemOption = Serialized<DB.MenuItemOption>;
+export type MenuCategory = Serialized<DB.MenuCategory>;
+export type Cart = Serialized<DB.Cart>;
+export type CartItem = Serialized<DB.CartItem>;
+export type Order = Serialized<DB.Order>;
+export type OrderItem = Serialized<DB.OrderItem>;
+export type Payment = Serialized<DB.Payment>;
+export type PickupSlot = Serialized<DB.PickupSlot>;
+export type Notification = Serialized<DB.Notification>;
+export type Wallet = Serialized<DB.Wallet>;
+export type WalletTransaction = Serialized<DB.WalletTransaction>;
+export type StudentProfile = Serialized<DB.StudentProfile>;
+export type User = Omit<DB.User, "password">;

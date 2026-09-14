@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Search } from "lucide-react";
 import { OrderStatusBadge } from "@/components/ui/status-badge";
 import { formatPrice, formatDate } from "@/lib/utils";
-import type { Order, OrderItem, Payment, PickupSlot } from "@prisma/client";
+import type { Order, OrderItem, Payment, PickupSlot } from "@/types/models";
 
 type AdminOrder = Order & {
   user: { name: string; email: string };

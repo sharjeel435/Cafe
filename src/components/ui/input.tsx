@@ -18,12 +18,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             className="text-sm font-medium text-gray-700"
           >
             {label}
-            {props.required && <span className="text-red-500 ml-1">*</span>}
+            {props.required && <span aria-hidden="true" className="text-red-500 ml-1">*</span>}
           </label>
         )}
         <input
           ref={ref}
           id={inputId}
+          aria-invalid={!!error}
+          aria-describedby={error || hint ? `${inputId}-description` : undefined}
           className={cn(
             "h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400",
             "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:border-transparent",
@@ -32,8 +34,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
           {...props}
         />
-        {error && <p className="text-xs text-red-600">{error}</p>}
-        {hint && !error && <p className="text-xs text-gray-500">{hint}</p>}
+        {error && <p id={`${inputId}-description`} role="alert" className="text-xs text-red-600">{error}</p>}
+        {hint && !error && <p id={`${inputId}-description`} className="text-xs text-gray-500">{hint}</p>}
       </div>
     );
   }
@@ -55,12 +57,14 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {label && (
           <label htmlFor={inputId} className="text-sm font-medium text-gray-700">
             {label}
-            {props.required && <span className="text-red-500 ml-1">*</span>}
+            {props.required && <span aria-hidden="true" className="text-red-500 ml-1">*</span>}
           </label>
         )}
         <textarea
           ref={ref}
           id={inputId}
+          aria-invalid={!!error}
+          aria-describedby={error || hint ? `${inputId}-description` : undefined}
           className={cn(
             "w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 resize-none",
             "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:border-transparent",
@@ -69,8 +73,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           )}
           {...props}
         />
-        {error && <p className="text-xs text-red-600">{error}</p>}
-        {hint && !error && <p className="text-xs text-gray-500">{hint}</p>}
+        {error && <p id={`${inputId}-description`} role="alert" className="text-xs text-red-600">{error}</p>}
+        {hint && !error && <p id={`${inputId}-description`} className="text-xs text-gray-500">{hint}</p>}
       </div>
     );
   }

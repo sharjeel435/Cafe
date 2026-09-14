@@ -1,5 +1,6 @@
 "use client";
 
+import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, ClipboardList, UtensilsCrossed, QrCode, Utensils, Menu, X } from "lucide-react";
@@ -21,7 +22,7 @@ export function StaffSidebar({ user }: StaffSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const NavContent = () => (
+  const navContent = (
     <>
       <div className="p-4 border-b border-gray-200 mb-2">
         <div className="flex items-center gap-2 font-bold text-lg text-gray-900">
@@ -58,7 +59,7 @@ export function StaffSidebar({ user }: StaffSidebarProps) {
       </nav>
 
       <div className="mt-auto p-4 border-t border-gray-100">
-        <div className="text-xs text-gray-500">{user.name}</div>
+        <div className="text-xs text-gray-500">{user.name}</div><button onClick={() => signOut({ callbackUrl: "/login" })} className="mt-2 text-xs font-semibold text-gray-600 hover:text-orange-600">Sign out</button>
         <div className="text-xs text-orange-600 font-medium capitalize">
           {user.role.toLowerCase()}
         </div>
@@ -70,7 +71,7 @@ export function StaffSidebar({ user }: StaffSidebarProps) {
     <>
       {/* Desktop sidebar */}
       <aside className="hidden md:flex fixed left-0 top-0 h-full w-56 bg-white border-r border-gray-200 flex-col z-30">
-        <NavContent />
+        {navContent}
       </aside>
 
       {/* Mobile top bar */}
@@ -97,7 +98,7 @@ export function StaffSidebar({ user }: StaffSidebarProps) {
             className="absolute left-0 top-0 h-full w-64 bg-white flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <NavContent />
+            {navContent}
           </div>
         </div>
       )}

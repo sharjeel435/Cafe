@@ -11,7 +11,7 @@ export function AdminSettingsClient({ settings }: { settings: Record<string, str
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    cafeteriaName: settings.cafeteriaName ?? "KU Main Cafeteria",
+    cafeteriaName: settings.cafeteriaName ?? "BUKC Main Cafeteria",
     openTime: settings.openTime ?? "08:00",
     closeTime: settings.closeTime ?? "17:00",
     serviceFee: settings.serviceFee ?? "0",

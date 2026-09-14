@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Clock, ChevronRight } from "lucide-react";
@@ -7,7 +8,7 @@ import { OrderStatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { formatPrice, formatDate } from "@/lib/utils";
-import type { Order, OrderItem, Payment, PickupSlot } from "@prisma/client";
+import type { Order, OrderItem, Payment, PickupSlot } from "@/types/models";
 
 type FullOrder = Order & {
   items: OrderItem[];
@@ -35,6 +36,7 @@ export function OrdersClient({
   activeTab: "active" | "past" | "cancelled";
 }) {
   const router = useRouter();
+  useEffect(() => { const timer = setInterval(() => router.refresh(), 15000); return () => clearInterval(timer); }, [router]);
   const empty = EMPTY_CONFIG[activeTab];
 
   return (

@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/.test-tools/
+/test-results/
+/playwright-report/
+/repair.py
+/eslint-results.json
+!.env.example

@@ -1,9 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
-import { mockStore } from "@/lib/mock-store";
-import bcrypt from "bcryptjs";
-import { loginSchema } from "@/lib/validations";
+import { authenticateUser } from "@/lib/credentials";
 import type { UserRole } from "@prisma/client";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -15,61 +13,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const parsed = loginSchema.safeParse(credentials);
-        if (!parsed.success) return null;
-
-        const { email, password } = parsed.data;
-
-        // 1. Check in-memory mock store
-        const mockUser = mockStore.users.find(
-          (u) => u.email.toLowerCase() === email.toLowerCase()
-        );
-        if (mockUser) {
-          if (mockUser.passwordHash === password) {
-            return {
-              id: mockUser.id,
-              email: mockUser.email,
-              name: mockUser.name,
-              role: mockUser.role,
-            };
-          }
-          // Also try bcrypt if hashed
-          try {
-            const match = await bcrypt.compare(password, mockUser.passwordHash);
-            if (match) {
-              return {
-                id: mockUser.id,
-                email: mockUser.email,
-                name: mockUser.name,
-                role: mockUser.role,
-              };
-            }
-          } catch {
-            // continue
-          }
-        }
-
-        // 2. Database fallback if available
-        try {
-          const user = await prisma.user.findUnique({
-            where: { email: email.toLowerCase() },
-            include: { studentProfile: true, staffProfile: true },
-          });
-
-          if (!user || !user.isActive) return null;
-
-          const passwordMatch = await bcrypt.compare(password, user.password);
-          if (!passwordMatch) return null;
-
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-          };
-        } catch {
-          return null;
-        }
+        return authenticateUser(credentials);
       },
     }),
   ],
@@ -79,6 +23,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.role = (user as { role: UserRole }).role;
       }
+      if (!token.id || typeof token.id !== "string") return null;
+      const currentUser = await prisma.user.findUnique({
+        where: { id: token.id },
+        select: { isActive: true, role: true },
+      });
+      if (!currentUser?.isActive) return null;
+      token.role = currentUser.role;
       return token;
     },
     async session({ session, token }) {

@@ -1,243 +1,174 @@
-"use server";
-
+﻿"use server";
 import { prisma } from "@/lib/prisma";
-import { mockStore } from "@/lib/mock-store";
 import { auth } from "@/lib/auth";
-
-/** Get cafeteria system settings as key-value map */
+import { actionError, campusClock, toMinutes } from "@/lib/order-helpers";
+import { defaultSettings } from "@/lib/default-settings";
+import { ensurePickupSlots } from "@/lib/pickup-slots";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 export async function getSettings(): Promise<Record<string, string>> {
-  if (Object.keys(mockStore.settings).length > 0) {
-    return mockStore.settings;
-  }
-
-  try {
-    const settings = await prisma.systemSetting.findMany();
-    return Object.fromEntries(settings.map((s) => [s.key, s.value]));
-  } catch {
-    return mockStore.settings;
-  }
-}
-
-/** Check if cafeteria is currently open */
-export async function getCafeteriaStatus(): Promise<{
-  isOpen: boolean;
-  openingTime: string;
-  closingTime: string;
-  rushLevel: string;
-  avgPrepTime: number;
-  nextSlot: string | null;
-  activeOrders: number;
-}> {
-  const settings = await getSettings();
-  const openingTime = settings.openingTime ?? "08:00";
-  const closingTime = settings.closingTime ?? "18:00";
-
-  const now = new Date();
-  const [oh, om] = openingTime.split(":").map(Number);
-  const [ch, cm] = closingTime.split(":").map(Number);
-  const openMinutes = (oh || 8) * 60 + (om || 0);
-  const closeMinutes = (ch || 18) * 60 + (cm || 0);
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  const isOpen = nowMinutes >= openMinutes && nowMinutes < closeMinutes;
-
-  let activeOrders = mockStore.orders.filter((o) =>
-    ["PENDING", "CONFIRMED", "PREPARING"].includes(o.status)
-  ).length;
-
-  try {
-    const dbActiveOrders = await prisma.order.count({
-      where: {
-        status: { in: ["PENDING", "CONFIRMED", "PREPARING"] },
-        createdAt: {
-          gte: new Date(Date.now() - 60 * 60 * 1000),
-        },
-      },
-    });
-    activeOrders = Math.max(activeOrders, dbActiveOrders);
-  } catch {
-    // fallback
-  }
-
-  let rushLevel = "LOW";
-  if (activeOrders >= 30) rushLevel = "VERY_BUSY";
-  else if (activeOrders >= 20) rushLevel = "BUSY";
-  else if (activeOrders >= 10) rushLevel = "MODERATE";
-
-  const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-  const nextSlot =
-    mockStore.pickupSlots.find(
-      (s) => s.startTime > currentTime && s.currentCount < s.maxOrders
-    ) ?? mockStore.pickupSlots[0];
-
-  const avgPrepTime = parseInt(settings.avgPrepTime ?? settings.minPreparationTime ?? "12", 10);
-
+  const rows = await prisma.systemSetting.findMany({
+    where: { key: { in: Object.keys(defaultSettings) } },
+  });
   return {
-    isOpen,
-    openingTime,
-    closingTime,
-    rushLevel,
-    avgPrepTime,
-    nextSlot: nextSlot ? `${nextSlot.startTime}–${nextSlot.endTime}` : "12:00–12:10",
+    ...defaultSettings,
+    ...Object.fromEntries(rows.map((row) => [row.key, row.value])),
+  };
+}
+export async function getCafeteriaStatus() {
+  const [settings, slots, activeOrders] = await Promise.all([
+    getSettings(),
+    ensurePickupSlots(),
+    prisma.order.count({
+      where: { status: { in: ["PENDING", "CONFIRMED", "PREPARING"] } },
+    }),
+  ]);
+  const clock = campusClock();
+  const next = slots.find((slot) => !slot.isFull);
+  return {
+    isOpen:
+      clock.minutes >= toMinutes(settings.openTime) &&
+      clock.minutes < toMinutes(settings.closeTime),
+    openingTime: settings.openTime,
+    closingTime: settings.closeTime,
+    rushLevel:
+      activeOrders >= 30
+        ? "VERY_BUSY"
+        : activeOrders >= 20
+          ? "BUSY"
+          : activeOrders >= 10
+            ? "MODERATE"
+            : "LOW",
+    avgPrepTime: Number(settings.avgPrepTime),
+    nextSlot: next ? `${next.startTime}–${next.endTime}` : null,
     activeOrders,
   };
 }
-
-/** Admin: update settings */
+const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+const numeric = (min: number, max: number) =>
+  z
+    .string()
+    .regex(/^\d+$/)
+    .refine((value) => Number(value) >= min && Number(value) <= max);
+const settingsSchema = z
+  .object({
+    cafeteriaName: z.string().trim().min(2).max(100),
+    openTime: time,
+    closeTime: time,
+    serviceFee: z
+      .string()
+      .regex(/^\d+(\.\d{1,2})?$/)
+      .refine((value) => Number(value) <= 100),
+    slotDuration: numeric(5, 60),
+    maxOrdersPerSlot: numeric(1, 100),
+    avgPrepTime: numeric(1, 120),
+    minPreparationTime: numeric(1, 120),
+    cancellationCutoff: z.enum(["PENDING", "CONFIRMED", "PREPARING"]),
+    cashEnabled: z.enum(["true", "false"]),
+    walletEnabled: z.enum(["true", "false"]),
+    rushHourStart: time,
+    rushHourEnd: time,
+  })
+  .strict()
+  .refine(
+    (value) => value.openTime < value.closeTime,
+    "Closing time must be later than opening time",
+  )
+  .refine(
+    (value) => value.rushHourStart < value.rushHourEnd,
+    "Rush hour end must be later than its start",
+  )
+  .refine(
+    (value) => value.cashEnabled === "true" || value.walletEnabled === "true",
+    "Enable at least one payment method",
+  );
 export async function updateSettings(
-  updates: Record<string, string>
+  updates: Record<string, string>,
 ): Promise<{ success: boolean; error?: string }> {
   const session = await auth();
-  if (!session || session.user.role !== "ADMIN") {
+  if (!session || session.user.role !== "ADMIN")
     return { success: false, error: "Unauthorized" };
-  }
-
-  // Update mockStore
-  Object.assign(mockStore.settings, updates);
-
   try {
-    await Promise.all(
-      Object.entries(updates).map(([key, value]) =>
+    const parsed = settingsSchema.safeParse({
+      ...(await getSettings()),
+      ...updates,
+    });
+    if (!parsed.success)
+      return { success: false, error: parsed.error.issues[0].message };
+    await prisma.$transaction(
+      Object.entries(parsed.data).map(([key, value]) =>
         prisma.systemSetting.upsert({
           where: { key },
           update: { value },
           create: { key, value, label: key },
-        })
-      )
+        }),
+      ),
     );
-  } catch {
-    // mockStore already updated
+    for (const path of ["/admin/settings", "/student", "/menu"])
+      revalidatePath(path, "layout");
+    return { success: true };
+  } catch (error) {
+    return actionError(error);
   }
-
-  return { success: true };
 }
-
-
-/** Admin: analytics summary */
 export async function getAnalytics() {
   const session = await auth();
   if (!session || session.user.role !== "ADMIN") return null;
-
-  // Realistic mock analytics
-  const mockAnalytics = {
-    todayOrders: 42,
-    todayCompleted: 38,
-    todayRevenue: 14250,
-    todayCancelled: 2,
-    cancellationRate: "4.8",
-    totalUsers: mockStore.users.filter((u) => u.role === "STUDENT").length || 3,
-    popularItems: [
-      { menuItemId: "item_1", itemName: "Chicken Biryani", _sum: { quantity: 18 } },
-      { menuItemId: "item_23", itemName: "Chai (Doodh Patti)", _sum: { quantity: 34 } },
-      { menuItemId: "item_6", itemName: "Zinger Burger", _sum: { quantity: 15 } },
-      { menuItemId: "item_15", itemName: "French Fries", _sum: { quantity: 22 } },
-      { menuItemId: "item_12", itemName: "Chicken Roll", _sum: { quantity: 19 } },
-    ],
-    ordersByHour: [
-      { hour: 9, count: 4 },
-      { hour: 10, count: 6 },
-      { hour: 11, count: 9 },
-      { hour: 12, count: 18 },
-      { hour: 13, count: 24 },
-      { hour: 14, count: 12 },
-      { hour: 15, count: 7 },
-      { hour: 16, count: 5 },
-    ],
-    revenueByDay: [
-      { date: "2026-09-08", revenue: 11200 },
-      { date: "2026-09-09", revenue: 13450 },
-      { date: "2026-09-10", revenue: 15100 },
-      { date: "2026-09-11", revenue: 14800 },
-      { date: "2026-09-12", revenue: 9500 },
-      { date: "2026-09-13", revenue: 16200 },
-      { date: "2026-09-14", revenue: 14250 },
-    ],
-    statusBreakdown: [
-      { status: "PENDING", _count: 3 },
-      { status: "CONFIRMED", _count: 4 },
-      { status: "PREPARING", _count: 6 },
-      { status: "READY", _count: 2 },
-      { status: "COMPLETED", _count: 38 },
-      { status: "CANCELLED", _count: 2 },
-    ],
+  const { start: today, end: tomorrow } = campusClock();
+  const since = new Date(today.getTime() - 6 * 86400000);
+  const [
+    todayOrders,
+    todayCompleted,
+    revenue,
+    todayCancelled,
+    totalUsers,
+    popularItems,
+    ordersByHour,
+    revenueByDay,
+    statusBreakdown,
+  ] = await Promise.all([
+    prisma.order.count({ where: { createdAt: { gte: today, lt: tomorrow } } }),
+    prisma.order.count({
+      where: { createdAt: { gte: today, lt: tomorrow }, status: "COMPLETED" },
+    }),
+    prisma.payment.aggregate({
+      where: {
+        status: "PAID",
+        order: { status: "COMPLETED", createdAt: { gte: today, lt: tomorrow } },
+      },
+      _sum: { total: true },
+    }),
+    prisma.order.count({
+      where: { createdAt: { gte: today, lt: tomorrow }, status: "CANCELLED" },
+    }),
+    prisma.user.count({ where: { role: "STUDENT" } }),
+    prisma.orderItem.groupBy({
+      by: ["menuItemId", "itemName"],
+      where: { order: { status: { not: "CANCELLED" } } },
+      _sum: { quantity: true },
+      orderBy: { _sum: { quantity: "desc" } },
+      take: 8,
+    }),
+    prisma.$queryRaw<
+      { hour: number; count: number }[]
+    >`SELECT EXTRACT(HOUR FROM ("createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Karachi'))::int AS hour, COUNT(*)::int AS count FROM "Order" WHERE "createdAt" >= ${today} AND "createdAt" < ${tomorrow} GROUP BY hour ORDER BY hour`,
+    prisma.$queryRaw<
+      { date: string; revenue: number }[]
+    >`SELECT TO_CHAR(o."createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Karachi', 'YYYY-MM-DD') AS date, COALESCE(SUM(p.total), 0)::float AS revenue FROM "Order" o JOIN "Payment" p ON p."orderId" = o.id AND p.status = 'PAID' WHERE o."createdAt" >= ${since} AND o."createdAt" < ${tomorrow} AND o.status = 'COMPLETED' GROUP BY date ORDER BY date`,
+    prisma.order.groupBy({ by: ["status"], _count: true }),
+  ]);
+  return {
+    todayOrders,
+    todayCompleted,
+    todayRevenue: Number(revenue._sum.total ?? 0),
+    todayCancelled,
+    cancellationRate: todayOrders
+      ? ((todayCancelled / todayOrders) * 100).toFixed(1)
+      : "0",
+    totalUsers,
+    popularItems,
+    ordersByHour,
+    revenueByDay,
+    statusBreakdown,
   };
-
-  try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    const [
-      todayOrders,
-      todayCompleted,
-      todayRevenue,
-      todayCancelled,
-      totalUsers,
-      popularItems,
-      ordersByHour,
-      revenueByDay,
-      statusBreakdown,
-    ] = await Promise.all([
-      prisma.order.count({ where: { createdAt: { gte: today, lt: tomorrow } } }),
-      prisma.order.count({
-        where: { createdAt: { gte: today, lt: tomorrow }, status: "COMPLETED" },
-      }),
-      prisma.payment.aggregate({
-        where: {
-          order: { createdAt: { gte: today, lt: tomorrow }, status: "COMPLETED" },
-          status: "PAID",
-        },
-        _sum: { total: true },
-      }),
-      prisma.order.count({
-        where: { createdAt: { gte: today, lt: tomorrow }, status: "CANCELLED" },
-      }),
-      prisma.user.count({ where: { role: "STUDENT" } }),
-      prisma.orderItem.groupBy({
-        by: ["menuItemId", "itemName"],
-        _sum: { quantity: true },
-        orderBy: { _sum: { quantity: "desc" } },
-        take: 8,
-      }),
-      prisma.$queryRaw<{ hour: number; count: number }[]>`
-        SELECT EXTRACT(HOUR FROM "createdAt") as hour, COUNT(*)::int as count
-        FROM "Order"
-        WHERE "createdAt" >= ${today} AND "createdAt" < ${tomorrow}
-        GROUP BY hour
-        ORDER BY hour
-      `,
-      prisma.$queryRaw<{ date: string; revenue: number }[]>`
-        SELECT DATE("createdAt") as date, COALESCE(SUM(p.total), 0)::float as revenue
-        FROM "Order" o
-        LEFT JOIN "Payment" p ON p."orderId" = o.id AND p.status = 'PAID'
-        WHERE o."createdAt" >= NOW() - INTERVAL '7 days'
-          AND o.status = 'COMPLETED'
-        GROUP BY DATE("createdAt")
-        ORDER BY date
-      `,
-      prisma.order.groupBy({
-        by: ["status"],
-        _count: true,
-      }),
-    ]);
-
-    const todayRevenueVal = parseFloat(todayRevenue._sum.total?.toString() ?? "0");
-    const cancellationRate =
-      todayOrders > 0 ? ((todayCancelled / todayOrders) * 100).toFixed(1) : "0";
-
-    return {
-      todayOrders,
-      todayCompleted,
-      todayRevenue: todayRevenueVal,
-      todayCancelled,
-      cancellationRate,
-      totalUsers,
-      popularItems,
-      ordersByHour,
-      revenueByDay,
-      statusBreakdown,
-    };
-  } catch {
-    return mockAnalytics;
-  }
 }

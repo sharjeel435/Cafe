@@ -1,10 +1,13 @@
 "use client";
 
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { markAllRead } from "@/server/actions/notifications";
 import Link from "next/link";
 import { Bell, Info, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { timeAgo } from "@/lib/utils";
-import type { Notification } from "@prisma/client";
+import type { Notification } from "@/types/models";
 import { cn } from "@/lib/utils";
 
 const ICONS = {
@@ -26,6 +29,8 @@ export function NotificationsClient({
 }: {
   notifications: Notification[];
 }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
   if (notifications.length === 0) {
     return (
       <EmptyState
@@ -38,7 +43,7 @@ export function NotificationsClient({
   }
 
   return (
-    <div className="py-4 space-y-2">
+    <div className="py-4 space-y-2"><button disabled={pending} onClick={() => startTransition(async () => { await markAllRead(); router.refresh(); })} className="mb-3 text-sm font-semibold text-orange-600">{pending ? "Updating…" : "Mark all as read"}</button>
       {notifications.map((n) => {
         const type = n.type as keyof typeof ICONS;
         const Wrapper = n.orderId

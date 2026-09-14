@@ -3,7 +3,7 @@
 import { formatPrice } from "@/lib/utils";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend
+  PieChart, Pie, Cell, LineChart, Line, CartesianGrid
 } from "recharts";
 
 interface AnalyticsData {
@@ -44,7 +44,7 @@ export function AdminDashboardClient({ analytics }: { analytics: AnalyticsData |
   } = analytics;
 
   const statCards = [
-    { label: "Today's Revenue", value: formatPrice(todayRevenue.toFixed(0)), color: "text-green-600", bg: "bg-green-50" },
+    { label: "Today's Revenue", value: formatPrice(todayRevenue.toFixed(2)), color: "text-green-600", bg: "bg-green-50" },
     { label: "Today's Orders", value: todayOrders, color: "text-blue-600", bg: "bg-blue-50" },
     { label: "Completed", value: todayCompleted, color: "text-orange-600", bg: "bg-orange-50" },
     { label: "Cancellation Rate", value: `${cancellationRate}%`, color: "text-red-600", bg: "bg-red-50" },

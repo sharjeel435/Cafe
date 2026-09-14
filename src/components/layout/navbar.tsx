@@ -27,7 +27,7 @@ export function Navbar() {
             <Utensils size={16} />
           </span>
           <span>
-            Campus<span className="text-orange-500">Bite</span>
+            Campus<span className="text-orange-500">Bite</span><span className="ml-2 rounded-md bg-orange-50 px-1.5 py-1 align-middle text-[10px] font-semibold text-orange-700">BUKC</span>
           </span>
         </Link>
 

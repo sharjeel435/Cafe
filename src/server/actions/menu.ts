@@ -1,170 +1,132 @@
-"use server";
-
+﻿"use server";
 import { prisma } from "@/lib/prisma";
-import { mockStore } from "@/lib/mock-store";
 import { auth } from "@/lib/auth";
+import { serialize } from "@/lib/serialize";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import type { ActionResult } from "./auth";
+import { actionError, OrderError } from "@/lib/order-helpers";
 
-/** Get all active menu items with category */
 export async function getMenuItems(params?: {
   categorySlug?: string;
   search?: string;
   availableOnly?: boolean;
 }) {
-  try {
-    let items = mockStore.menuItems.filter((i) => i.isActive);
-
-    if (params?.availableOnly) {
-      items = items.filter((i) => i.isAvailable);
-    }
-    if (params?.categorySlug) {
-      items = items.filter((i) => i.category?.slug === params.categorySlug);
-    }
-    if (params?.search) {
-      const q = params.search.toLowerCase();
-      items = items.filter(
-        (i) =>
-          i.name.toLowerCase().includes(q) ||
-          (i.description && i.description.toLowerCase().includes(q))
-      );
-    }
-
-    if (items.length > 0) {
-      return items.sort((a, b) => a.sortOrder - b.sortOrder);
-    }
-  } catch {
-    // fallback
-  }
-
-  try {
-    const where: Record<string, unknown> = { isActive: true };
-    if (params?.availableOnly) where.isAvailable = true;
-    if (params?.categorySlug) where.category = { slug: params.categorySlug };
-    if (params?.search) {
-      where.OR = [
-        { name: { contains: params.search, mode: "insensitive" } },
-        { description: { contains: params.search, mode: "insensitive" } },
-      ];
-    }
-    return await prisma.menuItem.findMany({
+  const where: Prisma.MenuItemWhereInput = {
+    isActive: true,
+    category: {
+      isActive: true,
+      ...(params?.categorySlug ? { slug: params.categorySlug } : {}),
+    },
+  };
+  if (params?.availableOnly) where.isAvailable = true;
+  if (params?.search?.trim())
+    where.OR = [
+      { name: { contains: params.search.trim(), mode: "insensitive" } },
+      { description: { contains: params.search.trim(), mode: "insensitive" } },
+    ];
+  return serialize(
+    await prisma.menuItem.findMany({
       where,
       include: { category: true, options: true },
       orderBy: [{ sortOrder: "asc" }, { totalOrdered: "desc" }],
-    });
-  } catch {
-    return [];
-  }
+    }),
+  );
 }
-
-/** Get single menu item by id */
 export async function getMenuItem(id: string) {
-  const item = mockStore.menuItems.find((i) => i.id === id);
-  if (item) return item;
-
-  try {
-    return await prisma.menuItem.findUnique({
-      where: { id },
+  return serialize(
+    await prisma.menuItem.findFirst({
+      where: { id, isActive: true, category: { isActive: true } },
       include: { category: true, options: true },
-    });
-  } catch {
-    return null;
-  }
+    }),
+  );
 }
-
-/** Get all categories */
 export async function getCategories() {
-  if (mockStore.categories.length > 0) {
-    return mockStore.categories.map((cat) => ({
-      ...cat,
+  return prisma.menuCategory.findMany({
+    where: { isActive: true },
+    orderBy: { sortOrder: "asc" },
+    include: {
       _count: {
-        items: mockStore.menuItems.filter(
-          (m) => m.categoryId === cat.id && m.isActive && m.isAvailable
-        ).length,
+        select: { items: { where: { isActive: true, isAvailable: true } } },
       },
-    }));
-  }
-
-  try {
-    return await prisma.menuCategory.findMany({
-      where: { isActive: true },
-      orderBy: { sortOrder: "asc" },
-      include: {
-        _count: { select: { items: { where: { isActive: true, isAvailable: true } } } },
-      },
-    });
-  } catch {
-    return [];
-  }
+    },
+  });
 }
-
-/** Toggle item availability (staff/admin) */
 export async function toggleItemAvailability(
   itemId: string,
-  isAvailable: boolean
+  isAvailable: boolean,
 ): Promise<ActionResult> {
   const session = await auth();
-  if (!session || (session.user.role !== "STAFF" && session.user.role !== "ADMIN")) {
+  if (!session || !["STAFF", "ADMIN"].includes(session.user.role))
     return { success: false, error: "Unauthorized" };
+  if (typeof isAvailable !== "boolean")
+    return { success: false, error: "Invalid availability" };
+  try {
+    await prisma.menuItem.update({
+      where: { id: itemId },
+      data: { isAvailable },
+    });
+    refreshMenu();
+    return { success: true, data: undefined };
+  } catch (error) {
+    return actionError(error);
   }
-
-  await prisma.menuItem.update({
-    where: { id: itemId },
-    data: { isAvailable },
-  });
-
-  revalidatePath("/staff/menu");
-  revalidatePath("/student/menu");
-  return { success: true, data: undefined };
 }
-
-/** Create or update menu item (staff/admin) */
+function refreshMenu() {
+  for (const path of [
+    "/menu",
+    "/student",
+    "/student/menu",
+    "/staff/menu",
+    "/admin/menu",
+  ])
+    revalidatePath(path);
+}
+const itemSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().trim().min(2).max(100),
+  description: z.string().max(1000).optional(),
+  price: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/)
+    .refine((p) => Number(p) > 0 && Number(p) <= 50000, "Invalid price"),
+  categoryId: z.string().min(1),
+  imageUrl: z
+    .union([z.literal(""), z.url().refine((url) => /^https?:\/\//.test(url))])
+    .optional(),
+  isAvailable: z.boolean(),
+  preparationTime: z.number().int().min(1).max(120),
+});
 export async function upsertMenuItem(
-  data: {
-    id?: string;
-    name: string;
-    description?: string;
-    price: string;
-    categoryId: string;
-    imageUrl?: string;
-    isAvailable: boolean;
-    preparationTime: number;
-  }
+  data: z.infer<typeof itemSchema>,
 ): Promise<ActionResult<{ id: string }>> {
   const session = await auth();
-  if (!session || (session.user.role !== "STAFF" && session.user.role !== "ADMIN")) {
+  if (!session || !["STAFF", "ADMIN"].includes(session.user.role))
     return { success: false, error: "Unauthorized" };
+  const parsed = itemSchema.safeParse(data);
+  if (!parsed.success)
+    return { success: false, error: parsed.error.issues[0].message };
+  try {
+    const { id, ...values } = parsed.data;
+    if (
+      !(await prisma.menuCategory.findFirst({
+        where: { id: values.categoryId, isActive: true },
+      }))
+    )
+      throw new OrderError("Select an active category");
+    const payload = { ...values, imageUrl: values.imageUrl || null };
+    const item = id
+      ? await prisma.menuItem.update({ where: { id }, data: payload })
+      : await prisma.menuItem.create({
+          data: {
+            ...payload,
+            slug: `${values.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${crypto.randomUUID()}`,
+          },
+        });
+    refreshMenu();
+    return { success: true, data: { id: item.id } };
+  } catch (error) {
+    return actionError(error);
   }
-
-  const slug = data.name
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-") + `-${Date.now()}`;
-
-  const item = await prisma.menuItem.upsert({
-    where: { id: data.id ?? "new" },
-    update: {
-      name: data.name,
-      description: data.description,
-      price: data.price,
-      categoryId: data.categoryId,
-      imageUrl: data.imageUrl || null,
-      isAvailable: data.isAvailable,
-      preparationTime: data.preparationTime,
-    },
-    create: {
-      name: data.name,
-      slug,
-      description: data.description,
-      price: data.price,
-      categoryId: data.categoryId,
-      imageUrl: data.imageUrl || null,
-      isAvailable: data.isAvailable,
-      preparationTime: data.preparationTime,
-    },
-  });
-
-  revalidatePath("/staff/menu");
-  revalidatePath("/student/menu");
-  return { success: true, data: { id: item.id } };
 }

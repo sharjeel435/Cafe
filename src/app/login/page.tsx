@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { Utensils, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ function LoginForm() {
 
   const {
     register,
+    setValue,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({
@@ -38,15 +39,74 @@ function LoginForm() {
       return;
     }
 
-    // Redirect based on role (handled by server after re-fetch)
-    // For now redirect to callbackUrl or let server determine
-    const redirectTo = callbackUrl ?? "/student";
-    router.push(redirectTo);
+    const session = await getSession();
+    const home =
+      session?.user.role === "ADMIN"
+        ? "/admin"
+        : session?.user.role === "STAFF"
+          ? "/staff"
+          : "/student";
+    const safeCallback =
+      callbackUrl &&
+      callbackUrl.startsWith(home) &&
+      !callbackUrl.includes("\\") &&
+      (callbackUrl === home || callbackUrl.startsWith(`${home}/`));
+    router.push(safeCallback ? callbackUrl : home);
     router.refresh();
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <details className="rounded-xl border border-orange-100 bg-orange-50 p-3 text-sm">
+        <summary className="cursor-pointer font-semibold text-orange-800">
+          Try a seeded demo account
+        </summary>
+        <p className="mt-2 text-xs text-gray-600">
+          Choose an account to fill its credentials, then sign in.
+        </p>
+        <div className="mt-3 grid gap-2">
+          {[
+            {
+              label: "Admin",
+              email: "admin@campusbite.pk",
+              password: "Admin@123",
+            },
+            {
+              label: "Staff",
+              email: "staff@campusbite.pk",
+              password: "Staff@123",
+            },
+            {
+              label: "Ahmed · Rs. 2,500 starting credit",
+              email: "ahmed@student.ku.edu.pk",
+              password: "Student@123",
+            },
+            {
+              label: "Fatima · Rs. 1,500 starting credit",
+              email: "fatima@student.ku.edu.pk",
+              password: "Student@123",
+            },
+            {
+              label: "Bilal · Rs. 500 starting credit",
+              email: "bilal@student.ku.edu.pk",
+              password: "Student@123",
+            },
+          ].map((account) => (
+            <button
+              type="button"
+              key={account.email}
+              onClick={() => {
+                setValue("email", account.email);
+                setValue("password", account.password);
+              }}
+              className="rounded-lg border border-orange-100 bg-white p-2 text-left hover:border-orange-400"
+            >
+              <span className="block font-medium">{account.label}</span>
+              <span className="text-xs text-gray-500">{account.email}</span>
+            </button>
+          ))}
+        </div>
+      </details>
       <Input
         label="Email address"
         type="email"
@@ -99,7 +159,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 font-bold text-xl">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 font-bold text-xl"
+          >
             <span className="flex items-center justify-center w-9 h-9 bg-orange-500 rounded-xl text-white">
               <Utensils size={18} />
             </span>
@@ -111,7 +174,7 @@ export default function LoginPage() {
             Welcome back
           </h1>
           <p className="text-sm text-gray-500">
-            Sign in to your CampusBite account
+            Sign in to your CampusBite BUKC account
           </p>
         </div>
 
@@ -124,7 +187,10 @@ export default function LoginPage() {
 
         <p className="text-center text-sm text-gray-600 mt-6">
           New student?{" "}
-          <Link href="/register" className="font-medium text-orange-600 hover:text-orange-700">
+          <Link
+            href="/register"
+            className="font-medium text-orange-600 hover:text-orange-700"
+          >
             Create an account
           </Link>
         </p>

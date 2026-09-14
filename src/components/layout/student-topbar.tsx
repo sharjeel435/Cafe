@@ -28,7 +28,7 @@ export function StudentTopBar({ user }: StudentTopBarProps) {
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
-      <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
         {isHome ? (
           <div className="flex items-center gap-2 font-bold text-lg text-gray-900">
             <span className="flex items-center justify-center w-7 h-7 bg-orange-500 rounded-lg text-white">
@@ -40,7 +40,7 @@ export function StudentTopBar({ user }: StudentTopBarProps) {
           <h1 className="font-semibold text-gray-900">{title}</h1>
         )}
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1"><Link href="/student/profile" className="mr-2 hidden text-sm font-medium text-gray-600 sm:block">{user.name.split(" ")[0]}</Link>
           <Link
             href="/student/notifications"
             className="relative p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"

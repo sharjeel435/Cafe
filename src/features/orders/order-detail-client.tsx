@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Clock, Check, Loader2, AlertTriangle } from "lucide-react";
 import { OrderStatusBadge } from "@/components/ui/status-badge";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { formatPrice, formatDate, formatTime } from "@/lib/utils";
 import { cancelOrder } from "@/server/actions/orders";
 import { toast } from "@/components/ui/toast";
-import type { Order, OrderItem, Payment, PickupSlot } from "@prisma/client";
+import type { Order, OrderItem, Payment, PickupSlot } from "@/types/models";
 
 type FullOrder = Order & {
   items: OrderItem[];
@@ -29,6 +29,7 @@ const STATUS_ORDER = ["PENDING", "CONFIRMED", "PREPARING", "READY", "COMPLETED"]
 
 export function OrderDetailClient({ order }: { order: FullOrder }) {
   const router = useRouter();
+  useEffect(() => { const timer = setInterval(() => router.refresh(), 15000); return () => clearInterval(timer); }, [router]);
   const [cancelling, setCancelling] = useState(false);
 
   const currentIndex = STATUS_ORDER.indexOf(order.status);

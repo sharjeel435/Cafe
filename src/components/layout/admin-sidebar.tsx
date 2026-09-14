@@ -1,5 +1,6 @@
 "use client";
 
+import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -22,7 +23,7 @@ export function AdminSidebar({ user }: { user: { name: string } }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const NavContent = () => (
+  const navContent = (
     <>
       <div className="p-4 border-b border-gray-200 mb-2">
         <div className="flex items-center gap-2 font-bold text-lg text-gray-900">
@@ -57,7 +58,7 @@ export function AdminSidebar({ user }: { user: { name: string } }) {
       </nav>
 
       <div className="p-4 border-t border-gray-100 mt-auto">
-        <div className="text-xs text-gray-500">{user.name}</div>
+        <div className="text-xs text-gray-500">{user.name}</div><button onClick={() => signOut({ callbackUrl: "/login" })} className="mt-2 text-xs font-semibold text-gray-600 hover:text-orange-600">Sign out</button>
         <div className="text-xs text-orange-600 font-medium">Administrator</div>
       </div>
     </>
@@ -66,7 +67,7 @@ export function AdminSidebar({ user }: { user: { name: string } }) {
   return (
     <>
       <aside className="hidden md:flex fixed left-0 top-0 h-full w-56 bg-white border-r border-gray-200 flex-col z-30">
-        <NavContent />
+        {navContent}
       </aside>
 
       <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-white border-b border-gray-200 h-14 flex items-center px-4 justify-between">
@@ -79,7 +80,7 @@ export function AdminSidebar({ user }: { user: { name: string } }) {
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setMobileOpen(false)}>
           <div className="absolute left-0 top-0 h-full w-64 bg-white flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <NavContent />
+            {navContent}
           </div>
         </div>
       )}

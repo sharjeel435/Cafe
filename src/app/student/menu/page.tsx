@@ -33,6 +33,7 @@ export default async function MenuPage({
         }
       >
         <MenuClient
+          key={JSON.stringify(params)}
           initialItems={items}
           categories={categories}
           initialParams={params}

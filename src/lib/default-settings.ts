@@ -1,0 +1,15 @@
+export const defaultSettings: Record<string, string> = {
+  cafeteriaName: "BUKC Main Cafeteria",
+  openTime: "08:00",
+  closeTime: "18:00",
+  serviceFee: "0",
+  slotDuration: "10",
+  maxOrdersPerSlot: "20",
+  avgPrepTime: "12",
+  minPreparationTime: "12",
+  cancellationCutoff: "CONFIRMED",
+  cashEnabled: "true",
+  walletEnabled: "true",
+  rushHourStart: "12:00",
+  rushHourEnd: "13:30",
+};

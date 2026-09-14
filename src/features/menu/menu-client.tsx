@@ -10,19 +10,20 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { formatPrice } from "@/lib/utils";
 import { addToCart } from "@/server/actions/cart";
 import { toast } from "@/components/ui/toast";
-import type { MenuItem, MenuCategory } from "@prisma/client";
+import type { MenuItem, MenuCategory } from "@/types/models";
 
 type MenuItemWithCategory = MenuItem & { category: MenuCategory };
 
 interface MenuClientProps {
   initialItems: MenuItemWithCategory[];
   categories: (MenuCategory & { _count: { items: number } })[];
+  publicView?: boolean;
   initialParams: { category?: string; search?: string; available?: string };
 }
 
 type SortOption = "popular" | "price-asc" | "price-desc" | "prep-time";
 
-export function MenuClient({ initialItems, categories, initialParams }: MenuClientProps) {
+export function MenuClient({ initialItems, categories, initialParams, publicView = false }: MenuClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [search, setSearch] = useState(initialParams.search ?? "");
@@ -64,6 +65,9 @@ export function MenuClient({ initialItems, categories, initialParams }: MenuClie
   );
 
   const handleAddToCart = async (itemId: string) => {
+    if (publicView) { router.push(`/login?callbackUrl=/student/menu/${itemId}`); return; }
+    const item = initialItems.find(item => item.id === itemId);
+    if (item && "options" in item && Array.isArray(item.options) && item.options.length) { router.push(`/student/menu/${itemId}`); return; }
     setAddingId(itemId);
     const result = await addToCart(itemId, 1);
     if (result.success) {
@@ -84,12 +88,13 @@ export function MenuClient({ initialItems, categories, initialParams }: MenuClie
         />
         <input
           type="search"
+          aria-label="Search the menu"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") updateFilters({ search });
           }}
-          placeholder="Search food..."
+          placeholder="Search dishes, drinks and more — press Enter"
           className="w-full h-11 pl-10 pr-4 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
         />
         {search && (
@@ -98,6 +103,7 @@ export function MenuClient({ initialItems, categories, initialParams }: MenuClie
               setSearch("");
               updateFilters({ search: "" });
             }}
+            aria-label="Clear search"
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
           >
             <X size={16} />
@@ -208,29 +214,29 @@ export function MenuClient({ initialItems, categories, initialParams }: MenuClie
           }
         />
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 min-[380px]:grid-cols-2 lg:grid-cols-3 gap-5">
           {sorted.map((item) => (
             <div
               key={item.id}
-              className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+              className="bg-white rounded-2xl border border-gray-200 overflow-hidden transition hover:shadow-md"
             >
-              <Link href={`/student/menu/${item.id}`} className="block">
+              <Link href={`${publicView ? "/menu" : "/student/menu"}/${item.id}`} className="block">
                 {item.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={item.imageUrl}
                     alt={item.name}
-                    className="w-full h-36 object-cover"
+                    className="w-full h-44 object-cover"
                     loading="lazy"
                   />
                 ) : (
-                  <div className="w-full h-36 bg-orange-50 flex items-center justify-center text-5xl">
+                  <div className="w-full h-44 bg-orange-50 flex items-center justify-center text-5xl">
                     🍽️
                   </div>
                 )}
               </Link>
-              <div className="p-3">
-                <Link href={`/student/menu/${item.id}`}>
+              <div className="p-4">
+                <Link href={`${publicView ? "/menu" : "/student/menu"}/${item.id}`}>
                   <h3 className="text-sm font-semibold text-gray-900 line-clamp-1 mb-0.5">
                     {item.name}
                   </h3>

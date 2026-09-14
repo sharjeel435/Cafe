@@ -8,14 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
 import { addToCart } from "@/server/actions/cart";
 import { toast } from "@/components/ui/toast";
-import type { MenuItem, MenuCategory, MenuItemOption } from "@prisma/client";
+import type { MenuItem, MenuCategory, MenuItemOption } from "@/types/models";
 
 type FullMenuItem = MenuItem & {
   category: MenuCategory;
   options: MenuItemOption[];
 };
 
-export function MenuItemDetail({ item }: { item: FullMenuItem }) {
+export function MenuItemDetail({ item, publicView = false }: { item: FullMenuItem; publicView?: boolean }) {
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
@@ -51,6 +51,7 @@ export function MenuItemDetail({ item }: { item: FullMenuItem }) {
 
   const handleAddToCart = async () => {
     if (!item.isAvailable) return;
+    if (publicView) { router.push(`/login?callbackUrl=/student/menu/${item.id}`); return; }
     setLoading(true);
 
     const result = await addToCart(
@@ -163,7 +164,7 @@ export function MenuItemDetail({ item }: { item: FullMenuItem }) {
       </div>
 
       {/* Sticky footer */}
-      <div className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-100 p-4 safe-bottom">
+      <div className={`fixed ${publicView ? "bottom-0" : "bottom-16"} inset-x-0 z-30 bg-white border-t border-gray-100 p-4 safe-bottom`}>
         <div className="max-w-2xl mx-auto flex items-center gap-4">
           {/* Quantity */}
           <div className="flex items-center gap-2">
@@ -193,7 +194,7 @@ export function MenuItemDetail({ item }: { item: FullMenuItem }) {
             className="flex-1"
           >
             <ShoppingCart size={18} />
-            Add to Cart · {formatPrice(totalPrice.toFixed(0))}
+            Add to Cart · {formatPrice(totalPrice.toFixed(2))}
           </Button>
         </div>
       </div>

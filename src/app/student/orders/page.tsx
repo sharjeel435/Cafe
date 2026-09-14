@@ -9,7 +9,7 @@ export default async function OrdersPage({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const params = await searchParams;
-  const tab = (params.tab as "active" | "past" | "cancelled") ?? "active";
+  const tab = params.tab === "past" || params.tab === "cancelled" ? params.tab : "active";
 
   const orders = await getStudentOrders(tab);
 

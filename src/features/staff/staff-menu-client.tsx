@@ -4,11 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ToggleLeft, ToggleRight, Plus, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
 import { toggleItemAvailability } from "@/server/actions/menu";
 import { toast } from "@/components/ui/toast";
-import type { MenuItem, MenuCategory } from "@prisma/client";
+import type { MenuItem, MenuCategory } from "@/types/models";
 
 type MenuItemWithCategory = MenuItem & { category: MenuCategory };
 

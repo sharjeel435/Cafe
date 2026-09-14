@@ -3,7 +3,7 @@
 import { ArrowDownLeft, ArrowUpRight, RefreshCw } from "lucide-react";
 import { paisaToRupees, formatDate } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
-import type { Wallet, WalletTransaction } from "@prisma/client";
+import type { Wallet, WalletTransaction } from "@/types/models";
 
 type FullWallet = Wallet & { transactions: WalletTransaction[] };
 

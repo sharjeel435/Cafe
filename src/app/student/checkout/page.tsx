@@ -1,3 +1,4 @@
+import { campusClock, toMinutes } from "@/lib/order-helpers";
 import { getCart } from "@/server/actions/cart";
 import { getAvailablePickupSlots } from "@/server/actions/orders";
 import { getWallet } from "@/server/actions/wallet";
@@ -22,7 +23,7 @@ export default async function CheckoutPage() {
   return (
     <CheckoutClient
       cart={cart}
-      slots={slots}
+      slots={slots.filter(slot => toMinutes(slot.startTime) >= campusClock().minutes + Math.max(...cart.items.map(item => item.menuItem.preparationTime)))}
       walletBalance={wallet?.balance ?? 0}
       settings={settings}
     />

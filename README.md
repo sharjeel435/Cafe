@@ -1,98 +1,79 @@
-# CampusBite — University Cafeteria Pre-Order Platform
+# CampusBite — BUKC
 
-> **Production-grade full-stack web application designed for Karachi University (KU) context.**  
-> Eliminates cafeteria queues during short class breaks by providing live digital menus, time-slotted pre-ordering, integrated campus wallet & cash payments, order tracking, and live staff fulfillment boards.
+Developed by **Bilal Khan**.
 
----
+Campus cafeteria ordering with Next.js 16, Prisma 5, PostgreSQL, and role-based NextAuth sessions. Demo data is seeded into PostgreSQL; the application does not use in-memory accounts, carts, wallets, or fake analytics.
 
-## 🚀 Key Features
+## Vercel + Prisma Postgres
 
-### 🎓 For Students
-- **Smart Digital Menu**: Instant search, category tabs (Desi, Burgers, Rolls, Snacks, Drinks, Tea & Coffee, Desserts), live stock availability toggles, and customizable item options (spice levels, sizes, extras).
-- **Time-Slotted Pickup**: Dynamic 10-minute pickup slots with slot capacity enforcement to prevent rush hour bottlenecking.
-- **Dual Payment Methods**: Instant payment via campus digital wallet (with integer-paisa accuracy) or cash on pickup.
-- **Live Order Tracking**: Visual progress pipeline (Pending → Confirmed → Preparing → Ready → Completed) with instant 4-digit pickup authentication code upon preparation completion.
-- **Campus Wallet**: Real-time balance tracker, transaction history with receipts, and automatic refunds upon order cancellation.
-- **In-App Notifications**: Real-time alerts on order status changes and wallet updates.
+1. Set the Vercel project **Root Directory** to `campusbite` if the repository contains this folder.
+2. Connect the Prisma Postgres integration to the project. Set `DATABASE_URL` to its PostgreSQL **TCP connection string** (`postgres://` or `postgresql://`). This project uses Prisma 5's PostgreSQL connector, not an HTTP driver. Use the provider's pooled endpoint for application traffic.
+3. Set a strong random `AUTH_SECRET` and `AUTH_TRUST_HOST=true` in Vercel. Set the variables for each environment you intend to use. A local `.env` does not configure Vercel. Remove stale localhost `AUTH_URL` / `NEXTAUTH_URL` values in Vercel; host detection handles its deployment URLs. When testing on a non-default local port, set `AUTH_URL` to that local origin.
+4. Copy `.env.example` to `.env` for local development and fill in your connection. Keep real credentials out of Git.
+5. For a **new, empty database**, run:
 
-### 👨‍🍳 For Cafeteria Staff
-- **Live Kanban Fulfillment Board**: Real-time 4-stage pipeline (New Orders, Confirmed, Preparing, Ready) with auto-refresh every 30 seconds and urgent order markers.
-- **Instant Menu Controls**: One-tap stock toggle to mark items sold out or back in stock immediately.
-- **Pickup Verification Terminal**: 4-digit code verifier verifying ready status before meal handover.
+   ```sh
+   npm install
+   npm run db:setup
+   ```
 
-### 🛠️ For Administrators
-- **Executive Analytics Dashboard**: Real-time sales metrics, hourly order distribution chart, 7-day revenue tracking, best-selling dishes ranking, and order status breakdown via Recharts.
-- **User & Student Management**: Full user registry, student ID tracking, and direct administrative wallet top-ups.
-- **Menu Management Console**: Complete CRUD interface for dishes, categories, pricing, and prep times.
-- **Cafeteria System Settings**: Dynamic configuration for cafeteria operating hours, rush hour windows, slot intervals, max orders per slot, and payment toggle switches.
+   This applies the checked-in migration and seeds the demo data. Run this with the intended database connection available to the shell. For migrations, use the provider's direct connection if its pooler does not support migration tooling; temporarily supply that connection as `DATABASE_URL` for the CLI.
 
----
+6. Deploy with Vercel's normal `npm run build` command. The build regenerates Prisma Client. It does **not** seed, reset, or migrate your database automatically. Apply later migrations with `npm run db:migrate` before deploying code that needs them.
 
-## 🛠️ Technology Stack
+If the database already contains the CampusBite tables from `prisma db push`, **do not reset it**. Compare its schema with `prisma/schema.prisma` first. Only when it matches the initial migration, baseline the existing schema with:
 
-- **Framework**: Next.js 16 (App Router, Turbopack, Server Actions)
-- **Language**: TypeScript (Strict Mode)
-- **Styling**: Tailwind CSS, Lucide React Icons
-- **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: NextAuth.js v5 with RBAC (`STUDENT`, `STAFF`, `ADMIN`) & Bcrypt password hashing
-- **Validation**: Zod schema validation & React Hook Form
-- **Data Visualization**: Recharts
-- **Testing**: Vitest & Playwright
-
----
-
-## 📦 Pre-configured Demo Accounts & Seed Data
-
-The database seed (`prisma/seed.ts`) provides **27 Pakistani cafeteria dishes** across 8 categories, 18 pickup slots for today, system settings, and demo credentials:
-
-| Role | Email | Password | Details |
-| :--- | :--- | :--- | :--- |
-| **Admin** | `admin@campusbite.pk` | `Admin@123` | Full dashboard, analytics, settings, user management |
-| **Staff** | `staff@campusbite.pk` | `Staff@123` | Live Kitchen Kanban board & Pickup code verifier |
-| **Student 1** | `ahmed@student.ku.edu.pk` | `Student@123` | STU-2026-001 (Wallet Balance: **Rs. 2,500**) |
-| **Student 2** | `fatima@student.ku.edu.pk` | `Student@123` | STU-2026-002 (Wallet Balance: **Rs. 1,500**) |
-| **Student 3** | `bilal@student.ku.edu.pk` | `Student@123` | STU-2026-003 (Wallet Balance: **Rs. 500**) |
-
----
-
-## ⚡ Quick Start & Database Setup
-
-### 1. Configure Environment
-Update `.env` with your PostgreSQL connection string:
-```env
-DATABASE_URL="postgresql://postgres:password@localhost:5432/campusbite"
-AUTH_SECRET="campusbite-dev-secret-key-change-in-production-32chars"
-NEXTAUTH_URL="http://localhost:3000"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-UNIVERSITY_EMAIL_DOMAIN=""
+```sh
+npx prisma migrate resolve --applied 20260915000000_initial
+npm run db:migrate
+npm run db:seed
 ```
 
-### 2. Push Schema and Run Seed (20+ Items)
-```bash
-# Push schema migrations to your database
-npm run prisma:push
+Provider references: [Prisma Postgres on Vercel](https://vercel.com/marketplace/prisma/prisma-postgres), [Prisma Postgres connection pooling](https://www.prisma.io/docs/postgres/database/connection-pooling).
 
-# Seed demo users, categories, 27 dishes & pickup slots
-npx tsx prisma/seed.ts
-```
+## Seeded demo accounts
 
-### 3. Start Development Server
-```bash
+| Role | Email | Password | Initial wallet |
+| --- | --- | --- | --- |
+| Admin | admin@campusbite.pk | Admin@123 | — |
+| Staff | staff@campusbite.pk | Staff@123 | — |
+| Student — Ahmed | ahmed@student.ku.edu.pk | Student@123 | Rs. 2,500 |
+| Student — Fatima | fatima@student.ku.edu.pk | Student@123 | Rs. 1,500 |
+| Student — Bilal | bilal@student.ku.edu.pk | Student@123 | Rs. 500 |
+
+The sign-in page can fill these demo credentials. The seed hashes passwords, creates 27 dishes across eight categories, and initializes settings. Rerunning the seed restores the listed demo passwords/roles but preserves existing wallet balances, transactions, orders, menu edits, and settings. Starting balances apply when a student's wallet is first created. Do not run the demo seed against unrelated accounts using these emails.
+
+## Local development
+
+```sh
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
 
----
+Open http://localhost:3000. Public visitors can browse `/menu`. Students manage carts, pickup orders, wallets, and notifications. Staff manage the kitchen board, stock availability, and collection. Administrators manage menu items, settings, student wallet credits, orders, and database-derived analytics.
 
-## 🧪 Running Tests & Quality Assurance
+Ordering follows **Asia/Karachi** time. Default hours are **08:00–18:00**. Pickup slots are generated daily, and checkout requires enough preparation time. An empty order history or zero analytics is valid; use a student account to place an order, then sign in as staff to fulfill it. Cash is marked paid when staff completes collection. Wallet credit is a cafeteria ledger, not a payment-gateway integration.
 
-```bash
-# Run unit test suite (Vitest)
-npm test
+Email password resets are not configured; the account-help page explains this without pretending to send mail.
 
-# Run TypeScript typecheck
+## Verification
+
+```sh
+npm run prisma:generate
 npm run typecheck
-
-# Run production build check
+npm run lint
+npm test
 npm run build
 ```
+
+`npm test` runs unit tests and skips database integration tests unless `TEST_DATABASE_URL` is set. The integration suite requires an isolated, seeded **local** PostgreSQL database named `campusbite_test`; it refuses cloud databases and mutates test data.
+
+PowerShell example, after creating the test database:
+
+```powershell
+$env:DATABASE_URL = 'postgresql://USER:PASSWORD@127.0.0.1:5432/campusbite_test'
+npm run db:setup
+$env:TEST_DATABASE_URL = $env:DATABASE_URL
+npm test
+```
+
+Integration tests cover all five credentials and initial balances, option pricing, ownership checks, insufficient funds, concurrent checkout/refunds, status transitions, cash collection, notifications, settings, and analytics. Browser tests run with `E2E_BASE_URL` pointing to the locally running, seeded app (`npm run test:e2e`). Use a disposable local database; browser tests create orders and simulate wallet payments.
