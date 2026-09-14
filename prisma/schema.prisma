@@ -1,0 +1,355 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum UserRole {
+  STUDENT
+  STAFF
+  ADMIN
+}
+
+enum StaffSubrole {
+  KITCHEN_STAFF
+  CASHIER
+  MANAGER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  WALLET
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
+}
+
+enum WalletTransactionType {
+  TOP_UP
+  PAYMENT
+  REFUND
+}
+
+enum RushLevel {
+  LOW
+  MODERATE
+  BUSY
+  VERY_BUSY
+}
+
+// ─────────────────────────────────────────────
+// USER & PROFILES
+// ─────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  password      String
+  role          UserRole @default(STUDENT)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  studentProfile  StudentProfile?
+  staffProfile    StaffProfile?
+  orders          Order[]
+  cart            Cart?
+  wallet          Wallet?
+  notifications   Notification[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model StudentProfile {
+  id          String  @id @default(cuid())
+  userId      String  @unique
+  studentId   String  @unique   // e.g. STU-2026-001
+  phone       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model StaffProfile {
+  id          String       @id @default(cuid())
+  userId      String       @unique
+  subrole     StaffSubrole @default(KITCHEN_STAFF)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────
+// MENU
+// ─────────────────────────────────────────────
+
+model MenuCategory {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  slug        String     @unique
+  emoji       String     @default("🍽️")
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  items       MenuItem[]
+}
+
+model MenuItem {
+  id               String   @id @default(cuid())
+  categoryId       String
+  name             String
+  slug             String   @unique
+  description      String?
+  price            Decimal  @db.Decimal(10, 2)  // Never float for money
+  imageUrl         String?
+  isAvailable      Boolean  @default(true)
+  isActive         Boolean  @default(true)
+  preparationTime  Int      @default(10)          // minutes
+  sortOrder        Int      @default(0)
+  totalOrdered     Int      @default(0)           // for popularity
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  category    MenuCategory     @relation(fields: [categoryId], references: [id])
+  options     MenuItemOption[]
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  @@index([categoryId])
+  @@index([isAvailable])
+  @@index([totalOrdered])
+}
+
+model MenuItemOption {
+  id           String  @id @default(cuid())
+  menuItemId   String
+  groupName    String  // e.g. "Spice Level", "Extras"
+  optionName   String  // e.g. "Normal", "Spicy", "Cheese"
+  extraPrice   Decimal @default(0) @db.Decimal(10, 2)
+  isDefault    Boolean @default(false)
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@index([menuItemId])
+}
+
+// ─────────────────────────────────────────────
+// CART
+// ─────────────────────────────────────────────
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+}
+
+model CartItem {
+  id              String  @id @default(cuid())
+  cartId          String
+  menuItemId      String
+  quantity        Int     @default(1)
+  selectedOptions Json    @default("[]")   // array of option ids
+  specialNote     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  cart     Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@index([cartId])
+}
+
+// ─────────────────────────────────────────────
+// PICKUP SLOTS
+// ─────────────────────────────────────────────
+
+model PickupSlot {
+  id          String   @id @default(cuid())
+  date        DateTime @db.Date             // The date this slot is for
+  startTime   String                        // e.g. "12:30"
+  endTime     String                        // e.g. "12:40"
+  maxOrders   Int      @default(10)
+  currentCount Int     @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders Order[]
+
+  @@unique([date, startTime])
+  @@index([date])
+}
+
+// ─────────────────────────────────────────────
+// ORDERS
+// ─────────────────────────────────────────────
+
+model Order {
+  id             String        @id @default(cuid())
+  orderNumber    String        @unique  // e.g. CB-2026-1042
+  userId         String
+  pickupSlotId   String?
+  status         OrderStatus   @default(PENDING)
+  pickupCode     String?       // 4-digit secure code shown to student
+  specialNote    String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  confirmedAt    DateTime?
+  preparingAt    DateTime?
+  readyAt        DateTime?
+  completedAt    DateTime?
+  cancelledAt    DateTime?
+
+  user        User        @relation(fields: [userId], references: [id])
+  pickupSlot  PickupSlot? @relation(fields: [pickupSlotId], references: [id])
+  items       OrderItem[]
+  payment     Payment?
+  notifications Notification[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([orderNumber])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id              String  @id @default(cuid())
+  orderId         String
+  menuItemId      String
+  // Snapshot prices at time of order — NEVER recalculate from current prices
+  itemName        String
+  itemPrice       Decimal @db.Decimal(10, 2)
+  quantity        Int
+  subtotal        Decimal @db.Decimal(10, 2)
+  selectedOptions Json    @default("[]")
+  specialNote     String?
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@index([orderId])
+}
+
+// ─────────────────────────────────────────────
+// PAYMENTS
+// ─────────────────────────────────────────────
+
+model Payment {
+  id            String        @id @default(cuid())
+  orderId       String        @unique
+  method        PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  amount        Decimal       @db.Decimal(10, 2)
+  serviceFee    Decimal       @default(0) @db.Decimal(10, 2)
+  total         Decimal       @db.Decimal(10, 2)
+  paidAt        DateTime?
+  refundedAt    DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────
+// WALLET
+// ─────────────────────────────────────────────
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  // Stored in paisa (integer) to avoid float arithmetic for money
+  // Display: divide by 100. e.g. 250000 paisa = Rs. 2,500
+  balance   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id          String                @id @default(cuid())
+  walletId    String
+  type        WalletTransactionType
+  // Amount in paisa
+  amount      Int
+  balanceAfter Int
+  description String
+  orderId     String?
+  createdAt   DateTime              @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("info")   // info | success | warning | error
+  isRead    Boolean  @default(false)
+  orderId   String?
+  createdAt DateTime @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────
+// SYSTEM SETTINGS
+// ─────────────────────────────────────────────
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  label     String
+  updatedAt DateTime @updatedAt
+}
