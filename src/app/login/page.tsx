@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { demoAccounts } from "@/lib/demo-accounts";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { useForm } from "react-hook-form";
@@ -35,7 +36,11 @@ function LoginForm() {
     });
 
     if (result?.error) {
-      toast.error("Invalid email or password. Please try again.");
+      toast.error(
+        result.error === "CredentialsSignin"
+          ? "Invalid email or password. Please try again."
+          : "Sign-in is unavailable right now. Please try again later.",
+      );
       return;
     }
 
@@ -59,39 +64,13 @@ function LoginForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <details className="rounded-xl border border-orange-100 bg-orange-50 p-3 text-sm">
         <summary className="cursor-pointer font-semibold text-orange-800">
-          Try a seeded demo account
+          Try a demo account
         </summary>
         <p className="mt-2 text-xs text-gray-600">
           Choose an account to fill its credentials, then sign in.
         </p>
         <div className="mt-3 grid gap-2">
-          {[
-            {
-              label: "Admin",
-              email: "admin@campusbite.pk",
-              password: "Admin@123",
-            },
-            {
-              label: "Staff",
-              email: "staff@campusbite.pk",
-              password: "Staff@123",
-            },
-            {
-              label: "Ahmed · Rs. 2,500 starting credit",
-              email: "ahmed@student.ku.edu.pk",
-              password: "Student@123",
-            },
-            {
-              label: "Fatima · Rs. 1,500 starting credit",
-              email: "fatima@student.ku.edu.pk",
-              password: "Student@123",
-            },
-            {
-              label: "Bilal · Rs. 500 starting credit",
-              email: "bilal@student.ku.edu.pk",
-              password: "Student@123",
-            },
-          ].map((account) => (
+          {demoAccounts.map((account) => (
             <button
               type="button"
               key={account.email}
@@ -101,8 +80,9 @@ function LoginForm() {
               }}
               className="rounded-lg border border-orange-100 bg-white p-2 text-left hover:border-orange-400"
             >
-              <span className="block font-medium">{account.label}</span>
-              <span className="text-xs text-gray-500">{account.email}</span>
+              <span className="block font-medium">{account.name}</span>
+              <span className="block text-xs text-gray-500">{account.email}</span>
+              <span className="block text-xs text-gray-600">Password: {account.password}</span>
             </button>
           ))}
         </div>

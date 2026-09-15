@@ -37,11 +37,11 @@ Provider references: [Prisma Postgres on Vercel](https://vercel.com/marketplace/
 | --- | --- | --- | --- |
 | Admin | admin@campusbite.pk | Admin@123 | — |
 | Staff | staff@campusbite.pk | Staff@123 | — |
-| Student — Ahmed | ahmed@student.ku.edu.pk | Student@123 | Rs. 2,500 |
-| Student — Fatima | fatima@student.ku.edu.pk | Student@123 | Rs. 1,500 |
-| Student — Bilal | bilal@student.ku.edu.pk | Student@123 | Rs. 500 |
+| Student — Bilal 1 | ahmed@student.ku.edu.pk | Student@123 | Rs. 2,500 |
+| Student — Bilal 2 | fatima@student.ku.edu.pk | Student@123 | Rs. 1,500 |
+| Student — Bilal 3 | bilal@student.ku.edu.pk | Student@123 | Rs. 500 |
 
-The sign-in page can fill these demo credentials. The seed hashes passwords, creates 27 dishes across eight categories, and initializes settings. Rerunning the seed restores the listed demo passwords/roles but preserves existing wallet balances, transactions, orders, menu edits, and settings. Starting balances apply when a student's wallet is first created. Do not run the demo seed against unrelated accounts using these emails.
+The five fixed demo credentials are defined in `src/lib/demo-accounts.ts`, shared by the login page and database seed. The sign-in page displays their passwords and fills the selected account. The seed hashes passwords, creates 27 dishes across eight categories, and initializes settings. Rerunning the seed restores the listed demo names/passwords/roles but preserves existing wallet balances, transactions, orders, menu edits, and settings. Starting balances apply when a student's wallet is first created. Do not run the demo seed against unrelated accounts using these emails.
 
 ## Local development
 

@@ -1,4 +1,5 @@
-import { PrismaClient, type UserRole } from "@prisma/client";
+import { demoAccounts } from "../src/lib/demo-accounts";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { defaultSettings } from "../src/lib/default-settings";
 import { campusClock } from "../src/lib/order-helpers";
@@ -10,57 +11,12 @@ const slugify = (name: string) =>
     .replace(/^-|-$/g, "");
 async function main() {
   console.log("Seeding demo accounts without deleting existing data...");
-  const accounts: {
-    name: string;
-    email: string;
-    password: string;
-    role: UserRole;
-    studentId?: string;
-    balance?: number;
-  }[] = [
-    {
-      name: "Admin User",
-      email: "admin@campusbite.pk",
-      password: "Admin@123",
-      role: "ADMIN",
-    },
-    {
-      name: "Hassan Ali",
-      email: "staff@campusbite.pk",
-      password: "Staff@123",
-      role: "STAFF",
-    },
-    {
-      name: "Ahmed Khan",
-      email: "ahmed@student.ku.edu.pk",
-      password: "Student@123",
-      role: "STUDENT",
-      studentId: "STU-2026-001",
-      balance: 250000,
-    },
-    {
-      name: "Fatima Zahra",
-      email: "fatima@student.ku.edu.pk",
-      password: "Student@123",
-      role: "STUDENT",
-      studentId: "STU-2026-002",
-      balance: 150000,
-    },
-    {
-      name: "Bilal Hussain",
-      email: "bilal@student.ku.edu.pk",
-      password: "Student@123",
-      role: "STUDENT",
-      studentId: "STU-2026-003",
-      balance: 50000,
-    },
-  ];
-  for (const account of accounts) {
+  for (const account of demoAccounts) {
     const password = await bcrypt.hash(account.password, 12);
     await prisma.$transaction(async (tx) => {
       const user = await tx.user.upsert({
         where: { email: account.email },
-        update: { password, role: account.role, isActive: true },
+        update: { name: account.name, password, role: account.role, isActive: true },
         create: {
           name: account.name,
           email: account.email,
