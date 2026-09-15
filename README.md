@@ -2,7 +2,7 @@
 
 Developed by **Bilal Khan**.
 
-Campus cafeteria ordering with Next.js 16, Prisma 5, PostgreSQL, and role-based NextAuth sessions. Demo data is seeded into PostgreSQL; the application does not use in-memory accounts, carts, wallets, or fake analytics.
+Campus cafeteria ordering with Next.js 16, Prisma 5, PostgreSQL, and role-based NextAuth sessions. The five fixed demo accounts open a database-free browser demo. Full application routes use PostgreSQL and role-based NextAuth sessions.
 
 ## Vercel + Prisma Postgres
 
@@ -31,7 +31,7 @@ npm run db:seed
 
 Provider references: [Prisma Postgres on Vercel](https://vercel.com/marketplace/prisma/prisma-postgres), [Prisma Postgres connection pooling](https://www.prisma.io/docs/postgres/database/connection-pooling).
 
-## Seeded demo accounts
+## Demo accounts
 
 | Role | Email | Password | Initial wallet |
 | --- | --- | --- | --- |
@@ -41,7 +41,11 @@ Provider references: [Prisma Postgres on Vercel](https://vercel.com/marketplace/
 | Student — Bilal 2 | fatima@student.ku.edu.pk | Student@123 | Rs. 1,500 |
 | Student — Bilal 3 | bilal@student.ku.edu.pk | Student@123 | Rs. 500 |
 
-The five fixed demo credentials are defined in `src/lib/demo-accounts.ts`, shared by the login page and database seed. The sign-in page displays their passwords and fills the selected account. The seed hashes passwords, creates 27 dishes across eight categories, and initializes settings. Rerunning the seed restores the listed demo names/passwords/roles but preserves existing wallet balances, transactions, orders, menu edits, and settings. Starting balances apply when a student's wallet is first created. Do not run the demo seed against unrelated accounts using these emails.
+Choose any of the five accounts on `/login` to open `/demo`. Demo sign-in does not contact NextAuth or PostgreSQL and does not require `AUTH_SECRET` or database setup. Wrong demo passwords are rejected locally. Other email addresses still use the normal server sign-in flow.
+
+The demo includes student menu search, carts, wallet/cash checkout, cancellation refunds, staff order preparation and pickup, and Admin credit, availability, and sales views. All data and payments are samples. Changes persist in `sessionStorage` across reloads and account switches within the same browser tab. Reset demo restores the samples; closing the tab clears them. Browser storage must be enabled. Demo account selection grants no access to real server sessions, protected routes, or database actions.
+
+The five fixed demo credentials are defined in `src/lib/demo-accounts.ts`, shared by the login page and database seed. The sign-in page displays their passwords and fills the selected account. To use the separate database-backed application, initialize PostgreSQL with the setup steps above. The seed hashes passwords, creates 27 dishes across eight categories, and initializes settings. Rerunning the seed restores the listed demo names/passwords/roles but preserves existing wallet balances, transactions, orders, menu edits, and settings. Starting balances apply when a student's wallet is first created. Do not run the demo seed against unrelated accounts using these emails.
 
 ## Local development
 
@@ -77,3 +81,5 @@ npm test
 ```
 
 Integration tests cover all five credentials and initial balances, option pricing, ownership checks, insufficient funds, concurrent checkout/refunds, status transitions, cash collection, notifications, settings, and analytics. Browser tests run with `E2E_BASE_URL` pointing to the locally running, seeded app (`npm run test:e2e`). Use a disposable local database; browser tests create orders and simulate wallet payments.
+
+Run the database-free demo browser checks with `E2E_BASE_URL` pointing to the local app and `npx playwright test tests/e2e/demo.spec.ts`. These tests block authentication endpoints and exercise all five demo logins and a student-to-staff-to-admin workflow.

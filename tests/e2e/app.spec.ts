@@ -5,10 +5,15 @@ async function login(
   password: string,
   path: string,
 ) {
-  await page.goto("/login");
-  await page.getByLabel(/Email address/).fill(email);
-  await page.getByLabel(/^Password/).fill(password);
-  await page.getByRole("button", { name: "Sign In", exact: true }).click();
+  // These tests cover database-backed routes. The login UI opens the separate demo.
+  const csrf = await page.request.get("/api/auth/csrf");
+  const { csrfToken } = await csrf.json();
+  const response = await page.request.post("/api/auth/callback/credentials", {
+    form: { csrfToken, email, password },
+    headers: { "X-Auth-Return-Redirect": "1" },
+  });
+  expect((await response.json()).url).not.toContain("error=");
+  await page.goto(path);
   await expect(page).toHaveURL(new RegExp(`${path}$`));
 }
 test.beforeEach(async ({ page, baseURL }) => {

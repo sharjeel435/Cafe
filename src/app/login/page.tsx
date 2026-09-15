@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { demoAccounts } from "@/lib/demo-accounts";
+import { demoSessionKey, findDemoAccount } from "@/lib/demo-store";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { useForm } from "react-hook-form";
@@ -29,6 +30,26 @@ function LoginForm() {
   });
 
   const onSubmit = async (data: LoginInput) => {
+    const demo = findDemoAccount(data.email, data.password);
+    if (demo) {
+      try {
+        sessionStorage.setItem(demoSessionKey, demo.email);
+        router.push("/demo");
+      } catch {
+        toast.error("Allow browser storage to open the demo.");
+      }
+      return;
+    }
+    if (
+      demoAccounts.some(
+        (account) => account.email === data.email.trim().toLowerCase(),
+      )
+    ) {
+      toast.error(
+        "Incorrect demo password. Choose an account above to fill its credentials.",
+      );
+      return;
+    }
     const result = await signIn("credentials", {
       email: data.email,
       password: data.password,
@@ -67,7 +88,8 @@ function LoginForm() {
           Try a demo account
         </summary>
         <p className="mt-2 text-xs text-gray-600">
-          Choose an account to fill its credentials, then sign in.
+          Choose an account, then sign in. Demo changes last for this browser
+          tab.
         </p>
         <div className="mt-3 grid gap-2">
           {demoAccounts.map((account) => (
@@ -81,8 +103,12 @@ function LoginForm() {
               className="rounded-lg border border-orange-100 bg-white p-2 text-left hover:border-orange-400"
             >
               <span className="block font-medium">{account.name}</span>
-              <span className="block text-xs text-gray-500">{account.email}</span>
-              <span className="block text-xs text-gray-600">Password: {account.password}</span>
+              <span className="block text-xs text-gray-500">
+                {account.email}
+              </span>
+              <span className="block text-xs text-gray-600">
+                Password: {account.password}
+              </span>
             </button>
           ))}
         </div>
