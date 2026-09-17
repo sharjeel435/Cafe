@@ -4,10 +4,26 @@ import {
   placeDemoOrder,
   cancelDemoOrder,
   findDemoAccount,
+  refreshDemoCatalog,
 } from "@/lib/demo-store";
 import { demoAccounts } from "@/lib/demo-accounts";
 
 describe("database-free demo", () => {
+  it("refreshes old menus without losing balances, orders, or stock changes", () => {
+    const state = createDemoState();
+    const email = demoAccounts[2].email;
+    state.menu[0].available = false;
+    state.menu[0].image = "";
+    state.menu.push({ ...state.menu[0], id: "egg-biryani" });
+    state.carts[email] = { biryani: 2, "egg-biryani": 1 };
+    const refreshed = refreshDemoCatalog(state);
+    expect(refreshed.menu.some((item) => item.id === "egg-biryani")).toBe(false);
+    expect(refreshed.menu[0].available).toBe(false);
+    expect(refreshed.menu[0].image).toBeTruthy();
+    expect(refreshed.carts[email]).toEqual({ biryani: 2 });
+    expect(refreshed.orders).toEqual(state.orders);
+    expect(refreshed.wallets).toEqual(state.wallets);
+  });
   it("accepts exactly the five fixed credentials", () => {
     for (const a of demoAccounts) {
       expect(findDemoAccount(a.email.toUpperCase(), a.password)?.name).toBe(

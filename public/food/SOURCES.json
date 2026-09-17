@@ -1,0 +1,151 @@
+{
+  "page": "https://www.foodpanda.pk/restaurant/m2re/kababjees-highway",
+  "note": "Restaurant menu photos used as sample dish illustrations; no affiliation. Existing biryani, burger and chai assets predate this catalog.",
+  "images": [
+    {
+      "id": "chicken-tikka",
+      "name": "Chicken Tikka",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420038.jpg?width=640&height=480"
+    },
+    {
+      "id": "seekh-kabab",
+      "name": "Beef Seekh Kabab",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420032.jpg?width=640&height=480"
+    },
+    {
+      "id": "malai-boti",
+      "name": "Chicken Malai Boti",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420036.jpg?width=640&height=480"
+    },
+    {
+      "id": "behari-boti",
+      "name": "Beef Behari Boti",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420041.jpg?width=640&height=480"
+    },
+    {
+      "id": "chicken-karahi",
+      "name": "Chicken Karahi",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420106.jpg?width=640&height=480"
+    },
+    {
+      "id": "white-handi",
+      "name": "Paneer Reshmi Handi",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420119.jpg?width=640&height=480"
+    },
+    {
+      "id": "daal-makhni",
+      "name": "Daal Makhni Handi",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420121.jpg?width=640&height=480"
+    },
+    {
+      "id": "palak-paneer",
+      "name": "Palak Paneer",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420122.jpg?width=640&height=480"
+    },
+    {
+      "id": "mixed-vegetables",
+      "name": "Mixed Vegetable Handi",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/54983103.jpg?width=640&height=480"
+    },
+    {
+      "id": "chicken-fried-rice",
+      "name": "Chicken Fried Rice",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420114.jpg?width=640&height=480"
+    },
+    {
+      "id": "kabuli-pulao",
+      "name": "Beef Kabuli Pulao",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/55051344.jpg?width=640&height=480"
+    },
+    {
+      "id": "chicken-mandi",
+      "name": "Chicken Mandi",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/651422.jpg?width=640&height=480"
+    },
+    {
+      "id": "chowmein",
+      "name": "Chicken Chowmein",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420104.jpg?width=640&height=480"
+    },
+    {
+      "id": "manchurian",
+      "name": "Chicken Manchurian with Rice",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420100.jpg?width=640&height=480"
+    },
+    {
+      "id": "corn-soup",
+      "name": "Chicken Corn Soup",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420024.jpg?width=640&height=480"
+    },
+    {
+      "id": "salad",
+      "name": "Fresh Green Salad",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/476367.jpg?width=640&height=480"
+    },
+    {
+      "id": "raita",
+      "name": "Raita",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/476368.jpg?width=640&height=480"
+    },
+    {
+      "id": "club-sandwich",
+      "name": "Club Sandwich",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420190.jpg?width=640&height=480"
+    },
+    {
+      "id": "alfredo",
+      "name": "Chicken Alfredo Pasta",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420176.jpg?width=640&height=480"
+    },
+    {
+      "id": "fish-chips",
+      "name": "Fish and Chips",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/419981.jpg?width=640&height=480"
+    },
+    {
+      "id": "dynamite-prawns",
+      "name": "Dynamite Prawns",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420001.jpg?width=640&height=480"
+    },
+    {
+      "id": "masala-fries",
+      "name": "Masala Fries",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/565290.jpg?width=640&height=480"
+    },
+    {
+      "id": "wings",
+      "name": "Spicy Chicken Wings",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/419972.jpg?width=640&height=480"
+    },
+    {
+      "id": "naan",
+      "name": "Plain Naan",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/420130.jpg?width=640&height=480"
+    },
+    {
+      "id": "paratha",
+      "name": "Puri Paratha",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/476438.jpg?width=640&height=480"
+    },
+    {
+      "id": "kunafa",
+      "name": "Kunafa",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/16890324.jpg?width=640&height=480"
+    },
+    {
+      "id": "brownie",
+      "name": "Chocolate Brownie",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/45947124.jpg?width=640&height=480"
+    },
+    {
+      "id": "mango-shake",
+      "name": "Mango Milkshake",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/476442.jpg?width=640&height=480"
+    },
+    {
+      "id": "limca",
+      "name": "Fresh Lime Soda",
+      "source": "https://images.deliveryhero.io/image/fd-pk/Products/55075083.jpg?width=640&height=480"
+    }
+  ]
+}

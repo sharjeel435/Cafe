@@ -12,6 +12,7 @@ import {
   demoSessionKey,
   demoStateKey,
   createDemoState,
+  refreshDemoCatalog,
   cartTotal,
   placeDemoOrder,
   cancelDemoOrder,
@@ -41,15 +42,7 @@ function readState(): DemoState {
         Number.isInteger(parsed.nextOrder) &&
         typeof parsed.cafeOpen === "boolean"
       )
-        return {
-          ...parsed,
-          menu: [
-            ...parsed.menu,
-            ...createDemoState().menu.filter(
-              (item) => !parsed.menu.some((saved: { id: string }) => saved.id === item.id),
-            ),
-          ],
-        };
+        return refreshDemoCatalog(parsed);
     }
   } catch {
     /* Restore sample data when storage is unavailable or corrupt. */
