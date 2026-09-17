@@ -88,6 +88,10 @@ export function createDemoState(): DemoState {
         image: "/food/chai.jpg",
         available: true,
       },
+      ...additionalDishes.map(([id, name, category, rupees, image]) => ({
+        id, name, category, price: rupees * 100,
+        image: `/food/${image}.jpg`, available: true,
+      })),
     ],
     wallets: Object.fromEntries(
       demoAccounts
@@ -110,6 +114,30 @@ export function createDemoState(): DemoState {
     cafeOpen: true,
   };
 }
+
+// Prices are authored in rupees and converted to the demo ledger's paisa above.
+const additionalDishes: [string, string, string, number, string][] = [
+  ["beef-biryani", "Beef Biryani", "Desi", 320, "biryani"],
+  ["mutton-biryani", "Mutton Biryani", "Desi", 450, "biryani"],
+  ["vegetable-biryani", "Vegetable Biryani", "Desi", 180, "biryani"],
+  ["egg-biryani", "Egg Biryani", "Desi", 200, "biryani"],
+  ["sindhi-biryani", "Sindhi Chicken Biryani", "Desi", 280, "biryani"],
+  ["beef-pulao", "Beef Pulao", "Desi", 300, "biryani"],
+  ["mutton-pulao", "Mutton Pulao", "Desi", 420, "biryani"],
+  ["vegetable-pulao", "Vegetable Pulao", "Desi", 170, "biryani"],
+  ["chana-pulao", "Chana Pulao", "Desi", 160, "biryani"],
+  ["chicken-fried-rice", "Chicken Fried Rice", "Rice", 280, "biryani"],
+  ["egg-fried-rice", "Egg Fried Rice", "Rice", 200, "biryani"],
+  ["vegetable-fried-rice", "Vegetable Fried Rice", "Rice", 180, "biryani"],
+  ["beef-burger", "Classic Beef Burger", "Burgers", 380, "burger"],
+  ["grilled-chicken-burger", "Grilled Chicken Burger", "Burgers", 360, "burger"],
+  ["double-zinger", "Double Zinger Burger", "Burgers", 520, "burger"],
+  ["spicy-chicken-burger", "Spicy Chicken Burger", "Burgers", 370, "burger"],
+  ["bbq-beef-burger", "BBQ Beef Burger", "Burgers", 430, "burger"],
+  ["mushroom-burger", "Mushroom Beef Burger", "Burgers", 450, "burger"],
+  ["veggie-burger", "Veggie Burger", "Burgers", 250, "burger"],
+  ["crispy-fish-burger", "Crispy Fish Burger", "Burgers", 390, "burger"],
+];
 
 export function cartTotal(state: DemoState, email: string) {
   return Object.entries(state.carts[email] ?? {}).reduce(
