@@ -15,7 +15,7 @@ type FullMenuItem = MenuItem & {
   options: MenuItemOption[];
 };
 
-export function MenuItemDetail({ item, publicView = false }: { item: FullMenuItem; publicView?: boolean }) {
+export function MenuItemDetail({ item, publicView = false, sampleView = false }: { item: FullMenuItem; publicView?: boolean; sampleView?: boolean }) {
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
@@ -51,9 +51,11 @@ export function MenuItemDetail({ item, publicView = false }: { item: FullMenuIte
 
   const handleAddToCart = async () => {
     if (!item.isAvailable) return;
+    if (sampleView) { router.push("/login"); return; }
     if (publicView) { router.push(`/login?callbackUrl=/student/menu/${item.id}`); return; }
     setLoading(true);
 
+    try {
     const result = await addToCart(
       item.id,
       quantity,
@@ -61,13 +63,16 @@ export function MenuItemDetail({ item, publicView = false }: { item: FullMenuIte
       specialNote || undefined
     );
 
-    setLoading(false);
-
     if (result.success) {
       toast.success(`${item.name} added to cart`);
       router.push("/student/menu");
     } else {
       toast.error(result.error);
+    }
+    } catch {
+      toast.error("Unable to add this item. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -75,7 +80,7 @@ export function MenuItemDetail({ item, publicView = false }: { item: FullMenuIte
     <div className="pb-32">
       {/* Back button */}
       <button
-        onClick={() => router.back()}
+        onClick={() => router.push(publicView ? "/menu" : "/student/menu")}
         className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 py-4"
       >
         <ArrowLeft size={18} />

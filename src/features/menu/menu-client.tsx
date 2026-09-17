@@ -18,12 +18,13 @@ interface MenuClientProps {
   initialItems: MenuItemWithCategory[];
   categories: (MenuCategory & { _count: { items: number } })[];
   publicView?: boolean;
+  sampleView?: boolean;
   initialParams: { category?: string; search?: string; available?: string };
 }
 
 type SortOption = "popular" | "price-asc" | "price-desc" | "prep-time";
 
-export function MenuClient({ initialItems, categories, initialParams, publicView = false }: MenuClientProps) {
+export function MenuClient({ initialItems, categories, initialParams, publicView = false, sampleView = false }: MenuClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [search, setSearch] = useState(initialParams.search ?? "");
@@ -65,17 +66,23 @@ export function MenuClient({ initialItems, categories, initialParams, publicView
   );
 
   const handleAddToCart = async (itemId: string) => {
+    if (sampleView) { router.push("/login"); return; }
     if (publicView) { router.push(`/login?callbackUrl=/student/menu/${itemId}`); return; }
     const item = initialItems.find(item => item.id === itemId);
     if (item && "options" in item && Array.isArray(item.options) && item.options.length) { router.push(`/student/menu/${itemId}`); return; }
     setAddingId(itemId);
+    try {
     const result = await addToCart(itemId, 1);
     if (result.success) {
       toast.success("Added to cart!");
     } else {
       toast.error(result.error);
     }
-    setAddingId(null);
+    } catch {
+      toast.error("Unable to add this item. Please try again.");
+    } finally {
+      setAddingId(null);
+    }
   };
 
   return (
@@ -145,7 +152,7 @@ export function MenuClient({ initialItems, categories, initialParams, publicView
       </div>
 
       {/* Filter row */}
-      <div className="flex items-center gap-3 mb-5">
+      <div className="flex flex-wrap items-center gap-3 mb-5">
         <div className="flex items-center gap-2">
           <SlidersHorizontal size={14} className="text-gray-500" />
           <span className="text-xs text-gray-500 font-medium">Sort:</span>
@@ -206,7 +213,8 @@ export function MenuClient({ initialItems, categories, initialParams, publicView
               onClick={() => {
                 setSearch("");
                 setSelectedCategory("");
-                updateFilters({ category: "", search: "" });
+                setAvailableOnly(false);
+                updateFilters({ category: "", search: "", available: "" });
               }}
             >
               Clear filters
@@ -260,7 +268,7 @@ export function MenuClient({ initialItems, categories, initialParams, publicView
                   </span>
                   <button
                     onClick={() => handleAddToCart(item.id)}
-                    disabled={!item.isAvailable || addingId === item.id}
+                    disabled={!item.isAvailable || addingId !== null}
                     className="h-8 px-3 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 text-white text-xs font-medium rounded-lg transition-colors"
                   >
                     {addingId === item.id ? "Adding…" : "+ Add"}

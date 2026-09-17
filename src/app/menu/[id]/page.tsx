@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { getMenuItem } from "@/server/actions/menu";
 import { MenuItemDetail } from "@/features/menu/menu-item-detail";
+import { sampleMenu } from "@/lib/sample-menu";
+import { SampleMenuNotice } from "@/components/ui/sample-menu-notice";
 
 export default async function MenuItemPage({
   params,
@@ -8,9 +10,10 @@ export default async function MenuItemPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const item = await getMenuItem(id);
+  const sampleView = id.startsWith("sample-");
+  const item = sampleView ? sampleMenu.find((item) => item.id === id) : await getMenuItem(id);
 
   if (!item) notFound();
 
-  return <MenuItemDetail publicView item={item} />;
+  return <>{sampleView && <SampleMenuNotice />}<MenuItemDetail publicView sampleView={sampleView} item={item} /></>;
 }

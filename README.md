@@ -55,6 +55,8 @@ npm run dev
 
 Open http://localhost:3000. Public visitors can browse `/menu`. Students manage carts, pickup orders, wallets, and notifications. Staff manage the kitchen board, stock availability, and collection. Administrators manage menu items, settings, student wallet credits, orders, and database-derived analytics.
 
+If the live public menu cannot load, `/menu` displays a labeled sample catalog with working search, categories, and dish details. Sample items lead to demo sign-in and cannot be added to real carts. Real ordering still requires a reachable, initialized PostgreSQL database. An empty live catalog remains empty rather than being replaced with samples.
+
 Ordering follows **Asia/Karachi** time. Default hours are **08:00–18:00**. Pickup slots are generated daily, and checkout requires enough preparation time. An empty order history or zero analytics is valid; use a student account to place an order, then sign in as staff to fulfill it. Cash is marked paid when staff completes collection. Wallet credit is a cafeteria ledger, not a payment-gateway integration.
 
 Email password resets are not configured; the account-help page explains this without pretending to send mail.
