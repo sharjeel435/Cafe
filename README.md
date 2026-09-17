@@ -57,6 +57,8 @@ Open http://localhost:3000. Public visitors can browse `/menu`. Students manage 
 
 If the live public menu cannot load, `/menu` displays a labeled sample catalog with working search, categories, and dish details. Sample items lead to demo sign-in and cannot be added to real carts. Real ordering still requires a reachable, initialized PostgreSQL database. An empty live catalog remains empty rather than being replaced with samples.
 
+The sample/demo catalog includes 58 items across 11 categories, including BBQ, karahi and handi, vegetarian meals, breakfast, street food, breads, and desserts. Menu variety was informed by [Kababjees](https://kababjees.com/) and [Foodpanda's Kababjees Highway listing](https://www.foodpanda.pk/restaurant/m2re/kababjees-highway). Prices are illustrative CampusBite demo prices, not restaurant quotes. No restaurant affiliation or ordering integration is implied. New dishes without photos display a placeholder; existing demo sessions receive new items without resetting orders or balances.
+
 Ordering follows **Asia/Karachi** time. Default hours are **08:00–18:00**. Pickup slots are generated daily, and checkout requires enough preparation time. An empty order history or zero analytics is valid; use a student account to place an order, then sign in as staff to fulfill it. Cash is marked paid when staff completes collection. Wallet credit is a cafeteria ledger, not a payment-gateway integration.
 
 Email password resets are not configured; the account-help page explains this without pretending to send mail.

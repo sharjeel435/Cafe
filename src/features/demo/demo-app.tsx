@@ -304,7 +304,7 @@ function DemoDashboard({ account }: { account: DemoAccount }) {
                 onChange={(e) => setCategory(e.target.value)}
                 className="rounded-xl border bg-white px-4 py-3"
               >
-                {["All", "Desi", "Burgers", "Drinks"].map((c) => (
+                {["All", ...new Set(state.menu.map((item) => item.category))].map((c) => (
                   <option key={c}>{c}</option>
                 ))}
               </select>
@@ -316,13 +316,13 @@ function DemoDashboard({ account }: { account: DemoAccount }) {
                   className="overflow-hidden rounded-2xl border bg-white"
                 >
                   <div className="relative h-40">
-                    <Image
+                    {item.image ? <Image
                       src={item.image}
                       alt={item.name}
                       fill
                       sizes="(max-width: 640px) 100vw, 33vw"
                       className="object-cover"
-                    />
+                    /> : <div className="flex h-full items-center justify-center bg-orange-50 text-orange-400"><Utensils size={48} aria-label="Dish photo coming soon" /></div>}
                   </div>
                   <div className="space-y-3 p-4">
                     <p className="text-xs font-semibold uppercase text-orange-600">
